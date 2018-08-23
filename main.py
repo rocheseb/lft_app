@@ -376,37 +376,79 @@ template_inputs = {
 # Main functions #
 ##################
 
-def execute(cmd,cwd=os.getcwd()):
+def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 	'''
 	Function to execute a prompt command and print the output
+	
+	cmd: command to execute (in a list)
+	cwd: working directory in which the command will be executed
+	input: what will be fed to the program if it prompts for input
 	'''
-	popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,cwd=cwd)
-	output,err = popen.communicate(input="0\n")
+
+	status_div = curdoc().select_one({"name":"status_div"})
+
+	popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
+	for elem in inputs:
+		popen.stdin.write('{}\n'.format(elem))
+	output, err = popen.communicate()
 	return_code = popen.wait()
-	if return_code:
-		raise subprocess.CalledProcessError(return_code, cmd)
+	#if return_code:
+	#	raise subprocess.CalledProcessError(return_code, cmd)
 	print(output)
 
+	undersampled = False
+	if 'undersampled' in output:
+		undersampled = True
+	spectral_detuning = False
+	if 'significant spectral detuning detected' in output:
+		spectral_detuning = True
+	shift_too_big = False
+	if 'Shift too big!' in output:
+		shift_too_big = True
+
 	output = output.splitlines()
-	if "stop program" in output[-1]:
-		spectral_detuning = float(output[-2])
-		status_div = curdoc().select_one({"name":"status_div"})
-		
-		status_div.text+='<br>- Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
-		status_div.text+='<br>- Rerun linefit with spectral detuning corrected'
 
-		input_file = os.path.join(wdir,'lft14.inp')
-		with open(input_file,'r') as infile:
-			content = infile.readlines()
+	if undersampled:
+		print('Undersampled:',undersampled)
+	if spectral_detuning:
+		print('Significant spectral detuning:',spectral_detuning)
+	if shift_too_big:
+		status_div.text+='<br>- Shift too big'
+		print('Shift too big:',shift_too_big)
+		print('The app cannot handle the "Shift too big" warning')
+		return
 
-		for i,line in enumerate(content):
-			if ".true.,1.0" in line:
-				content[i] = ".true.,1.0,{:.2E}\n".format(spectral_detuning)
+	if True in [elem in output[-1] for elem in ["shutdown program", 'stop program']]:
 
-		with open(input_file,'w') as outfile:
-			outfile.writelines(content)
+		if undersampled and not spectral_detuning and not shift_too_big:
+			status_div.text+='<br>- Spectrum undersampled'
+			status_div.text+='<br>- Rerun linefit and ignore warning'
+			execute(cmd,cwd=cwd,inputs=[1])
+		else:
+			
+			if spectral_detuning:
+				spectral_detuning = float(output[-2])
+						
+				status_div.text+='<br>- Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
+				status_div.text+='<br>- Rerun linefit with spectral detuning corrected'
 
-		execute(cmd,cwd=cwd)
+				input_file = os.path.join(wdir,'lft14.inp')
+				with open(input_file,'r') as infile:
+					content = infile.readlines()
+
+				for i,line in enumerate(content):
+					if ".true.,1.0" in line:
+						content[i] = ".true.,1.0,{:.2E}\n".format(spectral_detuning)
+
+				with open(input_file,'w') as outfile:
+					outfile.writelines(content)
+
+			if undersampled and shift_too_big:
+				execute(cmd,cwd=cwd,inputs=[1,0])
+			elif undersampled:
+				execute(cmd,cwd=cwd,inputs=[1])
+			else:
+				execute(cmd,cwd=cwd)
 
 def busy(func):
 	'''
