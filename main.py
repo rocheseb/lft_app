@@ -554,7 +554,7 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		'N_windows':N_windows,
 		'MW_list':['MW'+str(i+1) for i in range(N_windows)],		
 		'regularisation':reg,									# regularisation factor (for both modulation and phase)
-		'spectrum': os.path.join('lft_app','spectra',spectrum),	# full path to the spectrum
+		'spectrum': os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),	# full path to the spectrum
 		'temperature':'{:.2f}'.format(temperature),				# scanner temperature (K)
 		})
 
@@ -874,7 +874,7 @@ def ratio_spectrum(spectrum_path,spectrum,cell,mode):
 
 	new_y = y/base_y # ratio to ~1
 
-	np.savetxt(os.path.join('lft_app','spectra',spectrum),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
+	np.savetxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
 
 	curdoc().select_one({"name":"status_div"}).text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
 
@@ -971,7 +971,7 @@ def linefit_results(spectrum,colo):
 		curdoc().select_one({"name":"status_div"}).text+='<br>- Adding spectrum'
 		print('\n\t- Adding spectrum')
 
-		x,y = np.loadtxt(os.path.join('lft_app','spectra','cut',spectrum),unpack=True)
+		x,y = np.loadtxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
 	 
 		all_data[test]['spec'] = {'x':x,'y':y}
 
