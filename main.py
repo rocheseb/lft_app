@@ -822,8 +822,14 @@ def ratio_spectrum(spectrum_path,spectrum,cell,mode):
 	elif mode == 'opus':
 		opus_file = Opus(spectrum_path)
 		opus_file.get_data()
-		x = opus_file.xdata[1] # need to check if this always corresponds to the correct data block
-		y = opus_file.ydata[1]
+		subIDs = [elem['subID'] for elem in opus_file.param[1:]]
+		try:
+			ID = subIDs.index(136)
+		except ValueError:
+			ID = subIDs.index(4)
+		print(ID)
+		x = [elem for elem in opus_file.xdata if elem[0]!=0][0] # need to check if this always corresponds to the correct data block
+		y = opus_file.ydata[ID]
 		# cut the spectrum
 		if cell == 'hcl':
 			minwn,maxwn = (5200,5900)
