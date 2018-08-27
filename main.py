@@ -1004,11 +1004,16 @@ def linefit_results(spectrum,colo):
 		all_data[test]['mw{}'.format(it+1)] = {'x':content[0],'meas':content[1],'calc':content[2],'resid':resid}
 		all_data[test]['rms_resid_mw{}'.format(it+1)] = "{:.5f}".format(np.sqrt(np.mean(resid**2)))
 
+	all_data[test]['avg_rms_resid'] = np.mean(np.array([all_data[test]['rms_resid_mw{}'.format(it+1)] for it,mwfile in enumerate(mwfiles)]).astype(float))
+
 	mw_fig = curdoc().select_one({"name":"mw_fig"})
 	mw_fig.title.text = "Microwindow 1"
 
 	resid_fig = curdoc().select_one({"name":"resid_fig"})
 	resid_fig.title.text = 'RMS = '+all_data[test]['rms_resid_mw1']
+
+	avg_rms_div = curdoc().select_one({"name":"avg_rms_div"})
+	avg_rms_div.text = "Average rms of residuals = {:.5f}".format(all_data[test]['avg_rms_resid'])
 
 	curdoc().select_one({"name":"meas_line"}).data_source.data.update(all_data[test]['mw1'])
 	curdoc().select_one({"name":"calc_line"}).data_source.data.update(all_data[test]['mw1'])
@@ -1228,10 +1233,13 @@ def change_spectrum():
 	# Select microwindow and residuals figures
 	mw_fig = curdoc().select_one({"name":"mw_fig"})
 	resid_fig = curdoc().select_one({"name":"resid_fig"})
+	avg_rms_div = curdoc().select_one({"name":"avg_rms_div"})
 	# Get current microwindow
 	cur_MW = mw_fig.title.text.split()[1]	
-	# Update titles
+	# Update texts
 	resid_fig.title.text = 'RMS = '+all_data[test]['rms_resid_mw'+cur_MW]
+	avg_rms_div.text = "Average rms of residuals = {:.5f}".format(all_data[test]['avg_rms_resid'])
+
 	# Get ILS, microwindow, and averaging kernel data for the new spectrum
 	new_mw_data =  all_data[test]['mw'+cur_MW]
 	new_ILS_data =  all_data[test]['ILS']
@@ -1571,6 +1579,8 @@ def doc_maker():
 	resid_fig.yaxis.axis_label = '% Residuals'
 	resid_fig.xaxis.axis_label = 'Wavenumber (cm-1)'
 	resid_fig.title.text = 'RMS = '
+	# Div to show the average rms of residuals from all windows
+	avg_rms_div = Div(text="Average rms of residuals =",name="avg_rms_div")
 	# Averaging kernels
 	AKapo_fig = figure(title='AK apo',plot_width=450,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=DataRange1d(start=-0.8,end=1.1),tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKapo_fig")
 	AKphase_fig = figure(title='AK phase',plot_width=450,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=AKapo_fig.x_range,y_range=AKapo_fig.y_range,tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKphase_fig")
@@ -1620,7 +1630,7 @@ def doc_maker():
 	MEPECOL_panel = Panel(child=gridplot([[MEPECOL_grid,dum_fig]],toolbar_location=None),title='Summary',name="MEPECOL_panel")
 	
 	# Subgrid with the microwindow and residuals figures
-	mw_grid = gridplot([[mw_fig],[resid_fig]],toolbar_location=None)
+	mw_grid = gridplot([[mw_fig],[resid_fig],[avg_rms_div]],toolbar_location=None)
 	# Subgrid2 with the ILS figure and the mw_grid subgrid 
 	if ignore_spec:
 		ils_fits_grid = gridplot([[ILS_fig,mw_grid]],toolbar_location='left')
