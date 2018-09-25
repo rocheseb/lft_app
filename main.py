@@ -1316,7 +1316,7 @@ def pdf_report(save_name):
 	''' 
 	pdf = mpl_pdf.PdfPages(os.path.join(app_path,'pdf',save_name+'.pdf'))
 	mepefig,ax = pl.subplots(4,1)
-	mepefig.set_size_inches(10,8)
+	mepefig.set_size_inches(10,12)
 	mepelines = []
 	mepefig_indiv,ax_indiv = pl.subplots(3,1)
 	mepefig_indiv.set_size_inches(10,8)
@@ -1407,8 +1407,8 @@ def pdf_report(save_name):
 	pl.figure(mepefig.number)
 	for elem in ax:
 		box = elem.get_position()
-		elem.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-	lgd = pl.legend(mepelines,[test for test in all_data if 'reg' in test],bbox_to_anchor=(1.02, 4),loc='center left', borderaxespad=0)
+		elem.set_position([box.x0, box.y0, box.width, box.height*0.7])
+	lgd = pl.legend(mepelines,[test for test in all_data if 'reg' in test],bbox_to_anchor=(0.5,-0.3),loc='upper center', borderaxespad=0,ncol=3)
 	ax[0].set_ylabel("ME")
 	ax[1].set_ylabel("Phase Error")
 	ax[1].set_xlabel("OPD (cm)")
@@ -1417,7 +1417,7 @@ def pdf_report(save_name):
 	ax[3].set_ylabel("ME at MOPD")
 	ax[3].set_xlabel("Date")
 	ax[3].set_xlim(mindate-timedelta(days=1),maxdate+timedelta(days=1))
-	pl.tight_layout()
+	#pl.tight_layout()
 	pdf.savefig(mepefig,bbox_inches='tight',bbox_extra_artist=[lgd])
 
 	pl.close('all')
