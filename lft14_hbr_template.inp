@@ -7,10 +7,7 @@ input
     for each species: linelist (HITRAN format)
 
 $
-'hit/species.inf'
-1
-'hit/16_hit08.par'
-0
+{{species}}
 
 output 
     Output directory

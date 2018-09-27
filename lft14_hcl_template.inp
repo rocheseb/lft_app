@@ -7,14 +7,7 @@ input
     for each species: linelist (HITRAN format)
 
 $
-hit\species.inf
-2
-hit\15_hit08.par
-1
-151
-hit\15_hit08.par
-1
-152
+{{species}}
 
 
 
