@@ -152,6 +152,14 @@ def n2o_cells():
 def window_data():
 	"""
 	List of windows to be used by linefit for each cell
+
+	For each cell the main code uses by default:
+
+	window_dict['hcl'] for hcl
+	window_dict['n2o'] for hcl
+	window_dict['hbr'] for hcl
+
+	The use of the custom window lists is not yet supported
 	"""
 
 	window_dict = {}

@@ -27,6 +27,8 @@ If the "conda" command does not find the package, you can also use pip:
 
 	pip install PackageName
 
+After installing anaconda, you should only need to install the "parse" and "re" packages
+
 If you encounter error messages related to bokeh when running the app, you can try to revert to an earlier version of the package with:
 
 	conda install bokeh=0.12.10
@@ -89,22 +91,100 @@ There are two example spectra from Eureka in lft_app/spectra/cut/ so the app can
 
 Spectra should be ratioed to ~1 to be used with the linefit extended mode:
 
-- HCl cells: 
+- HCl cells, done in the code: 
 	- no background
 	- In the code I fit a 2nd order polynomial to the spectrum without the lines and use that to ratio the spectrum to normalize it to ~1 (seems more consistent than using a fixed numbers)
 
-- HBr cells:
+- HBr cells, done in the code:
 	- background
 	- the background file should be cut the same way as the spectrum if .dpt files are used, have the same file name but starting with 'ref_' (e.g. ref_180308_eu_HBr_180_e_0.dpt)
 	- put the HBr background files in lft_app/spectra/background/
 	- the spectra are ratioed with the background
 	- the resulting ratioed spectrum is ratioed with its own average to normalize it to ~1
 
-- N2O cells:
+- N2O cells, done by you ! :
 	- background, but different resolution from the spectrum
 	- the rationg of spectrum with background shoul be done in OPUS
 	- the resulting spectrum should be placed in lft_app/spectra/cut
 	- it will be ratioed with its own average to normalize it to ~ 1
+
+### User interface ###
+
+##### Update dropdowns #####
+
+This button allows you to update the list of files in the dropdown (e.g. if you added a file under spectra/cut after starting the app)
+
+##### Previous session #####
+
+Dropdown to select a .npy file from a previously saved session, it loads all the data from previous tests and allows you to add new runs.
+
+##### Load session #####
+
+Load the selected .npy file
+
+##### Spectrum #####
+
+Dropdown to select a spectrum file from the lft_app/spectra/cut/ directory
+
+##### Regularisation factor #####
+
+Textinput to quickly change the regularisation factor (same number for reg_mod and reg_phase)
+
+##### Run linefit #####
+
+Runs linefit !!
+
+##### Save name #####
+
+Textinput to specify a name for pdf and npy files that will be saved under lft_app/save/ and lft_app/pdf/, no need for an extension
+
+##### Save #####
+
+Button to save the current document in .npy file under lft_app/save/
+
+Also saves static plots in a PDF (the last summary layout will break if there are a lot of tests)
+
+##### Loop key #####
+
+Textinput to provide a filename pattern and run linefit (with the specified regularisation factor) for all the spectra under lft_app/spectra/cut that match the pattern.
+
+This accepts * notations 
+
+e.g. *_eu_* will run linefit for all Eureka tests, 
+
+*_eu_HCl_* will run all Eureka HCl tests
+
+1803*_eu_HCl_* will run all Eureka HCl tests from march 2018
+
+etc.
+
+I would not advise using it for more than a few tens of spectra, the layout/browser may not handle it
+
+Since it is not possible to have more than 20 contrasting colors, the colors will switch to a continuous viridis color palette if there are more spectra than that.
+
+##### Test buttons #####
+
+For each linefit run, a button will be added, to allow to switch between different runs, and a a red cross button will appear next to it to remove that test from the document (slow process as it needs to remake the whole document each time)
+
+#### Legends ####
+
+Legends are clickable to show / hide corresponding lines
+
+#### Toolbars ####
+
+Check out the different options of the toolbars ! (icons on the left of plots)
+
+The save tool is clunky, it will save each plot in a separate png in your default download folder
+
+### ILS and fits tab ###
+
+You can switch between the different microwindows with the 'MW' buttons
+
+The average RMS from all the windows is also displayed at the bottom
+
+#### Averaging kernels tab ####
+
+You can click or select the scatter points to highlight the correspond averaging kernel row(s)
 
 ### Other info ###
 
