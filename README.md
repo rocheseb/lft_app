@@ -150,11 +150,11 @@ Textinput to provide a filename pattern and run linefit (with the specified regu
 
 This accepts * notations 
 
-e.g. *_eu_* will run linefit for all Eureka tests, 
+e.g. \*_eu_\* will run linefit for all Eureka tests, 
 
-*_eu_HCl_* will run all Eureka HCl tests
+\*_eu_HCl_\* will run all Eureka HCl tests
 
-1803*_eu_HCl_* will run all Eureka HCl tests from march 2018
+1803\*_eu_HCl_\* will run all Eureka HCl tests from march 2018
 
 etc.
 
@@ -166,23 +166,23 @@ Since it is not possible to have more than 20 contrasting colors, the colors wil
 
 For each linefit run, a button will be added, to allow to switch between different runs, and a a red cross button will appear next to it to remove that test from the document (slow process as it needs to remake the whole document each time)
 
-#### Legends ####
+##### Legends #####
 
 Legends are clickable to show / hide corresponding lines
 
-#### Toolbars ####
+##### Toolbars #####
 
 Check out the different options of the toolbars ! (icons on the left of plots)
 
 The save tool is clunky, it will save each plot in a separate png in your default download folder
 
-### ILS and fits tab ###
+##### ILS and fits tab #####
 
 You can switch between the different microwindows with the 'MW' buttons
 
 The average RMS from all the windows is also displayed at the bottom
 
-#### Averaging kernels tab ####
+##### Averaging kernels tab #####
 
 You can click or select the scatter points to highlight the correspond averaging kernel row(s)
 
