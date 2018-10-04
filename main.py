@@ -313,7 +313,7 @@ elif system == 'Linux':
 elif system == 'Darwin':
 	lft_command = ['./lft145_gfortran']
 
-specname_fmt = '{}_{}_{}_{:d}_{}_{:d}.{}' # formatted string for spectrum file names YYMMDD_site_cell_X_MOPD_num
+specname_fmt = '{}_{}_{}_{:d}_{}_{:d}.{}' # formatted string for spectrum file names YYMMDD_site_cell_MOPD_X_num
 
 fmt = '{:.2f},.false.,{:.4e},{:.3f},.false.,{:.3f},0.0075\n' # formatted string to read and edit the input file
 
@@ -331,7 +331,7 @@ kelly_colors = [ 	'#F3C300','#875692', '#F38400', '#A1CAF1','#BE0032', '#C2B280'
 				 	'#F99379', '#604E97', '#F6A600','#B3446C', '#DCD300', '#882D17','#8DB600', '#654522', '#E25822','#2B3D26',		]
 
 # You can add any number of colors to that list, for example do something like below
-#kelly_colors += ['blue','red','green','chartreuse','magenta','firebrick']
+# kelly_colors += ['blue','red','green','chartreuse','magenta','firebrick']
 # but it is not really possible to have only high contrast colors for more than 20 colors
 
 # if more than 20 lines are plotted the color palette will be switched to viridis(n) with n the number of lines

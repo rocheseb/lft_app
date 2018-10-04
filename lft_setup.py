@@ -13,6 +13,9 @@ def site_data():
 	data['FOC'] = {
 					'eu':418.0, # Eureka
 					'et':418.0, # East Trout Lake
+					'ra':418.0, # St Denis
+					'lr':418.0, # new Lauder
+					'll':418.0, # old Lauder					
 					}
 
 	return data
@@ -81,6 +84,48 @@ def hcl_cells():
 	cell['et']['h35cl_column'] = 1.3310e+22
 	cell['et']['h37cl_column'] = 1.3260e+22
 	cell['et']['calibration_run'] = 1510
+
+	# St Denis
+	cell['ra'] = {key:template[key] for key in template}
+	cell['ra']['location'] = 'St. Denis'
+	cell['ra']['owner'] = 'Royal Belgian Institute for Space Aeronomy'
+	cell['ra']['ID'] = 4
+	cell['ra']['length'] = 100
+	cell['ra']['batch'] = 'CT1303'
+	cell['ra']['text_on_cell_body'] = 'cell #4'
+	cell['ra']['effp_h35cl_296k'] = 5.10
+	cell['ra']['effp_h37cl_296k'] = 5.10
+	cell['ra']['h35cl_column'] = 1.268e+22
+	cell['ra']['h37cl_column'] = 1.268e+22
+	cell['ra']['calibration_run'] = 1303
+
+	# New Lauder
+	cell['lr'] = {key:template[key] for key in template}
+	cell['lr']['location'] = 'Lauder'
+	cell['lr']['owner'] = 'NIWA'
+	cell['lr']['ID'] = 54
+	cell['lr']['length'] = 100
+	cell['lr']['batch'] = 'CT1510'
+	cell['lr']['text_on_cell_body'] = 'cell #48'
+	cell['lr']['effp_h35cl_296k'] = 4.706
+	cell['lr']['effp_h37cl_296k'] = 4.847
+	cell['lr']['h35cl_column'] = 1.3442e+22
+	cell['lr']['h37cl_column'] = 1.3419e+22
+	cell['lr']['calibration_run'] = 1510
+
+	# Old Lauder
+	cell['ll'] = {key:template[key] for key in template}
+	cell['ll']['location'] = 'Lauder'
+	cell['ll']['owner'] = 'NIWA'
+	cell['ll']['ID'] = 33
+	cell['ll']['length'] = 100
+	cell['ll']['batch'] = 'Special'
+	cell['ll']['text_on_cell_body'] = 'Caltech'
+	cell['ll']['effp_h35cl_296k'] = 4.793
+	cell['ll']['effp_h37cl_296k'] = 4.759
+	cell['ll']['h35cl_column'] = 1.3028e+22
+	cell['ll']['h37cl_column'] = 1.2947e+22
+	cell['ll']['calibration_run'] = 1312
 
 	return cell
 
@@ -156,8 +201,8 @@ def window_data():
 	For each cell the main code uses by default:
 
 	window_dict['hcl'] for hcl
-	window_dict['n2o'] for hcl
-	window_dict['hbr'] for hcl
+	window_dict['n2o'] for n2o
+	window_dict['hbr'] for hbr
 
 	The use of the custom window lists is not yet supported
 	"""
