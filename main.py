@@ -341,7 +341,7 @@ kelly_colors = [ 	'#F3C300','#875692', '#F38400', '#A1CAF1','#BE0032', '#C2B280'
 
 app_path = os.path.dirname(__file__) # the app should be in ... /linefit/lft145/lft_app
 spec_path = os.path.join(app_path,'spectra','cut') # ... /linefit/lft145/lft_app/spectra/cut
-ref_path = os.path.join(app_path,'spectra','background') # ... /linefit/lft145/lft_app/spectra/background
+bkg_path = os.path.join(app_path,'spectra','background') # ... /linefit/lft145/lft_app/spectra/background
 save_path = os.path.join(app_path,'saved_sessions') # ... /linefit/lft145/lft_app/saved_sessions
 static_path = os.path.join(app_path,'static') # ... /linefit/lft145/lft_app/static
 
@@ -350,13 +350,13 @@ erg_path = os.path.join(wdir,'ergs') # ... /linefit/lft145/ergs
 
 print('app_path:',app_path)
 print('spec_path:',spec_path)
-print('ref_path:',ref_path)
+print('bkg_path:',bkg_path)
 print('save_path:',save_path)
 print('static_path:',static_path)
 print('wdir:',wdir)
 print('erg_path:',erg_path)
 
-for path in [app_path,spec_path,ref_path,save_path,static_path,erg_path]:
+for path in [app_path,spec_path,bkg_path,save_path,static_path,erg_path]:
 	if not os.path.exists(path):
 		print('WARNING: Missing path',path)
 
@@ -752,11 +752,11 @@ def setup_linefit():
 		check_spectrum(spectrum_path,spectrum)
 		# also check the background spectrum for MIR cells
 		if cell == 'hbr':
-			ref_path = os.path.join(ref_path,'ref_'+spectrum)
+			ref_path = os.path.join(bkg_path,'ref_'+spectrum)
 			check_spectrum(ref_path,'ref_'+spectrum)
 
 	# comment out to not ratio the spectrum, the temp file still needs to be in lft_app/spectra/cut and the spectrum will need to be directly in lft_app/spectra
-	ratio_spectrum(spectrum_path,spectrum,cell,mode) 
+	ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) 
 
 	# update the input file; make sure that it modifies everything that you need !
 	# the regularisation factors are updated from the browser
@@ -887,7 +887,7 @@ def check_spectrum(spectrum_path,spectrum):
 		with open(spectrum_path,'w') as outfile:
 			outfile.writelines(content[::-1])
 
-def ratio_spectrum(spectrum_path,spectrum,cell,mode):
+def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 	'''
 	For HCl cells, fit a second order polynomial to a spectrum in order to ratio it to ~1
 
@@ -932,7 +932,7 @@ def ratio_spectrum(spectrum_path,spectrum,cell,mode):
 		base_y = fit[0]*x**2+fit[1]*x+fit[2]-0.0004 # use the fit to get the fit line for each x
 
 	elif cell == 'hbr':
-		ref_path = os.path.join(ref_path,'ref_'+spectrum)
+		ref_path = os.path.join(bkg_path,'ref_'+spectrum)
 		if mode == 'dpt':	
 			xref,yref = np.loadtxt(ref_path,unpack=True)
 		elif mode == 'opus':
