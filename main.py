@@ -619,9 +619,9 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 	species = system_species[system][cell]
 
 	if system in ["Linux","Darwin"]:
-		spec_inp_path = '"'+os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt')+'"'
+		spec_inp_path = '"'+os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt')+'"'
 	elif system == "Windows":
-		spec_inp_path = os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt')
+		spec_inp_path = os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt')
 
 	template_inputs.update({
 		'species':species,										# species
@@ -957,7 +957,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 
 	new_y = y/base_y # ratio to ~1
 
-	np.savetxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
+	np.savetxt(os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
 
 	curdoc().select_one({"name":"status_div"}).text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
 
@@ -1054,7 +1054,7 @@ def linefit_results(spectrum,colo):
 		curdoc().select_one({"name":"status_div"}).text+='<br>- Adding spectrum'
 		print('\n\t- Adding spectrum')
 
-		x,y = np.loadtxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
+		x,y = np.loadtxt(os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
 	 
 		all_data[test]['spec'] = {'x':x,'y':y}
 
