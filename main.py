@@ -7,217 +7,7 @@ from __future__ import print_function # allows the use of Python 3.x print funct
 # Code Description #
 ####################
 '''
-# README #
-This is the same as in the README.md file
-
-Linefit is an instrument line shape-calculating program written by Frank Hase at the Institute for Meteorology und Climate Research (IMK) in Karlsruhe. 
-
-	Frank Hase, Thomas Blumenstock, and Clare Paton-Walsh, Analysis of the Instrumental Line Shape of High-Resolution Fourier Transform IR Spectrometers with Gas Cell Measurements and New Retrieval Software, Applied Optics, Vol. 38, Issue 15, pp. 3417-3422 (1999)
-
-This app can be used to run linefit 14.5 and display its outputs.
-
-This app requires python 2.7.x (not tested with python 3.x) with bokeh installed.
-
-	Bokeh: https://bokeh.pydata.org/en/latest/docs/installation.html
-
-### Python ###
-
-I suggest downloading python from https://www.anaconda.com/download/
-Choose your operating system and get Python2.7
-
-To install bokeh use the command (with windows you need to run the terminal as administator):
-
-	conda install -c bokeh bokeh
-
-To install a package:
-
-	conda install PackageName
-
-If the "conda" command does not find the package, you can also use pip:
-
-	pip install PackageName
-
-After installing anaconda, you should only need to install the "parse" and "re" packages
-
-If you encounter error messages related to bokeh when running the app, you can try to revert to an earlier version of the package with:
-
-	conda install bokeh=0.12.10
-
-### How to use this app ###
-
-This can read both OPUS and .dpt files.
-
-Using .dpt files requires extra steps.
-
-- Put the lft_app folder in the linefit/lft145/ directory
-- lft145.exe and the directories 'hit' and 'ergs' must be present in the linefit/lft145/ directory
-- Spectrum file names need to follow this naming convention: YYMMDD_site_cell_MOPD_X_num.ext
-	- YYMMDD year month day
-	- site: two letter site abbreviation (e.g. eu for Eureka, oc for Lamont)
-	- cell: one of 'hbr', 'n2o', 'hcl'
-	- X: 'v' for vented instrument, 'e' for evacuated
-	- MOPD: the maximum optical path difference in cm
-	- num: an index number for the cell test (there might be more than one per day)
-	- ext: either 'dpt' or a number
-	
-		e.g. 180308_eu_HCl_45_e_0.dpt or 180308_eu_HCl_45_e_0.0 
-		For the first HCl cell test with 45 MOPD in an evacuated instrument at Eureka on March 8 2018
-		For opus files the extension number does not matter
-
-- For several tests in one day : 161122_eu_HCl_45_e_0.dpt, 161122_eu_HCl_45_e_1.dpt etc.
-- Spectra must be placed in lft_app/spectra/cut
-- For '.DPT' files:
-	- .dpt (data point table) files can be generated in OPUS via the pop-up window generated with "Save as" 
-	- they must have no headers and be cut e.g. between ~5200-5900 wavenumbers for HCl cells
-	- In lft_app/spectra/cut/temp.dat write the spectrum filename, scanner temperature, and aperture size.
-	
-			spectrumfilename1,temperature1,apt_size1
-			spectrumfilename2,temperature2,apt_size2
-			etc.
-
-	- in lft_app/lft_setup.py add the focal length of collimator of your instrument
-- For opus files the parameters are read directly from the file
-	
-- In lft_app/lft_setup.py, add your cell information (follow the template)
-
-- To run the app, navigate to the linefit/lft145/ directory in your terminal and use the command
-
-	bokeh serve --show lft_app --args light
-
-The --show option will pop up the browser.
-
-By default the spectrum itself will be plotted in the browser and also saved in the data dictionary. This can lead to very large files and more loading time.
-
-The --args light option will not display or save the whole spectrum.
-
-While the server is running, the app will be available in the browser at localhost:5006/lft_app
-
-- Python dictionaries of the data are saved in lft_app/saved_sessions/
-- PDF documents with the plots are saved in lft_app/pdf/
-
-There are two example spectra from Eureka in lft_app/spectra/cut/ so the app can be tested directly.
-
-### Rationg of spectra ###
-
-Spectra should be ratioed to ~1 to be used with the linefit extended mode:
-
-- HCl cells, done in the code: 
-	- no background
-	- In the code I fit a 2nd order polynomial to the spectrum without the lines and use that to ratio the spectrum to normalize it to ~1 (seems more consistent than using a fixed numbers)
-
-- HBr cells, done in the code:
-	- background
-	- the background file should be cut the same way as the spectrum if .dpt files are used, have the same file name but starting with 'ref_' (e.g. ref_180308_eu_HBr_180_e_0.dpt)
-	- put the HBr background files in lft_app/spectra/background/
-	- the spectra are ratioed with the background
-	- the resulting ratioed spectrum is ratioed with its own average to normalize it to ~1
-
-- N2O cells, done by you ! :
-	- background, but different resolution from the spectrum
-	- the rationg of spectrum with background shoul be done in OPUS
-	- the resulting spectrum should be placed in lft_app/spectra/cut
-	- it will be ratioed with its own average to normalize it to ~ 1
-
-### User interface ###
-
-##### Update dropdowns #####
-
-This button allows you to update the list of files in the dropdown (e.g. if you added a file under spectra/cut after starting the app)
-
-##### Previous session #####
-
-Dropdown to select a .npy file from a previously saved session, it loads all the data from previous tests and allows you to add new runs.
-
-##### Load session #####
-
-Load the selected .npy file
-
-##### Spectrum #####
-
-Dropdown to select a spectrum file from the lft_app/spectra/cut/ directory
-
-##### Regularisation factor #####
-
-Textinput to quickly change the regularisation factor (same number for reg_mod and reg_phase)
-
-##### Run linefit #####
-
-Runs linefit !!
-
-##### Save name #####
-
-Textinput to specify a name for pdf and npy files that will be saved under lft_app/save/ and lft_app/pdf/, no need for an extension
-
-##### Save #####
-
-Button to save the current document in .npy file under lft_app/save/
-
-Also saves static plots in a PDF (the last summary layout will break if there are a lot of tests)
-
-##### Loop key #####
-
-Textinput to provide a filename pattern and run linefit (with the specified regularisation factor) for all the spectra under lft_app/spectra/cut that match the pattern.
-
-This accepts * notations 
-
-e.g. *_eu_* will run linefit for all Eureka tests, 
-
-*_eu_HCl_* will run all Eureka HCl tests
-
-1803*_eu_HCl_* will run all Eureka HCl tests from march 2018
-
-etc.
-
-I would not advise using it for more than a few tens of spectra, the layout/browser may not handle it
-
-Since it is not possible to have more than 20 contrasting colors, the colors will switch to a continuous viridis color palette if there are more spectra than that.
-
-##### Test buttons #####
-
-For each linefit run, a button will be added, to allow to switch between different runs, and a a red cross button will appear next to it to remove that test from the document (slow process as it needs to remake the whole document each time)
-
-#### Legends ####
-
-Legends are clickable to show / hide corresponding lines
-
-#### Toolbars ####
-
-Check out the different options of the toolbars ! (icons on the left of plots)
-
-The save tool is clunky, it will save each plot in a separate png in your default download folder
-
-### ILS and fits tab ###
-
-You can switch between the different microwindows with the 'MW' buttons
-
-The average RMS from all the windows is also displayed at the bottom
-
-#### Averaging kernels tab ####
-
-You can click or select the scatter points to highlight the correspond averaging kernel row(s)
-
-### Other info ###
-
-N2O and HBr cell spectra are processed in a loop until the cell pressure converges; this usually take 2-3 linefit runs.
-
-The python dictionaries saved in lft_app/saved_sessions/ can be merged with a utility program lft_app/utils/merge_sessions.py
-
-The merged file can then be loaded from the browser.
-
-### DISCLAIMER ###
-
-If any warning or error message is given by linefit, this app will hang, you should then run linefit from the terminal to figure out what the problem is.
-
-The app may hang if there is any convergence problem.
-
-There will be more detailed outputs in the terminal than in the browser.
-
-If a significant spectral detuning is detected, the app will use it to update the input file and re-run linefit.
-
-### Contact ###
-
-sebastien.roche@mail.utoronto.ca
-
+See the README file.
 '''
 ####################
 # Import libraries #
@@ -293,27 +83,27 @@ def linediv(color='lightblue',width=400):
 	Function to generate a Div widget with a straight line.
 	This is because a same model cannot be used several times in a same document.
 	"""
-	return Div(text='<hr width="100%" color="{}">'.format(color),width=width)
+	return Div(text='<hr width="{}px" color="{}">'.format(width,color))
 
 #########
 # Setup #
 #########
 
 argu = sys.argv
-ignore_spec = False
-if 'light' in argu:
-	# bokeh serve lftp_app --args light 
-	ignore_spec = True # the spectrum will not be plotted or saved in the numpy file
+ignore_spec = True
+if 'spec' in argu:
+	# bokeh serve lftp_app --args spec 
+	ignore_spec = False # the spectrum will be plotted, and saved in the numpy file
 
 system = platform.system()
 if system == 'Windows':
-	lft_command = ['lft145.exe']
+	lft_command = ['lft147.exe']
 elif system == 'Linux':
-	lft_command = ['./lft145_ifort']
+	lft_command = ['./lft147_ifort']
 elif system == 'Darwin':
-	lft_command = ['./lft145_gfortran']
+	lft_command = ['./lft147_gfortran']
 
-specname_fmt = '{}_{}_{}_{:d}_{}_{:d}.{}' # formatted string for spectrum file names YYMMDD_site_cell_MOPD_X_num
+specname_fmt = '{}_{}_{}_{:d}_{}_{:d}.{}' # formatted string for spectrum file names YYMMDD_site_cell_X_MOPD_num
 
 fmt = '{:.2f},.false.,{:.4e},{:.3f},.false.,{:.3f},0.0075\n' # formatted string to read and edit the input file
 
@@ -331,7 +121,7 @@ kelly_colors = [ 	'#F3C300','#875692', '#F38400', '#A1CAF1','#BE0032', '#C2B280'
 				 	'#F99379', '#604E97', '#F6A600','#B3446C', '#DCD300', '#882D17','#8DB600', '#654522', '#E25822','#2B3D26',		]
 
 # You can add any number of colors to that list, for example do something like below
-# kelly_colors += ['blue','red','green','chartreuse','magenta','firebrick']
+#kelly_colors += ['blue','red','green','chartreuse','magenta','firebrick']
 # but it is not really possible to have only high contrast colors for more than 20 colors
 
 # if more than 20 lines are plotted the color palette will be switched to viridis(n) with n the number of lines
@@ -372,8 +162,7 @@ TOOLS = "box_zoom,wheel_zoom,pan,redo,undo,reset,save" # tools that will be avai
 
 all_data = {'ID':0} # this dictionary will store all the data for plots; 'ID' will store the ID of the appriopriate color from 'kelly_colors'
 
-
-## hardcoded species for the different systems
+## hardcoded species for the different systems, the difference between windows and linux seems to only be " -> '
 linux_hcl_species = \
 """"hit/species.inf"
 2
@@ -429,6 +218,7 @@ for cell in ['hcl','n2o','hbr']:
 	with open(os.path.join(app_path,'lft14_{}_template.inp'.format(cell)),'r') as infile:
 		template_map[cell] = Template(infile.read())
 
+# The things that will be edited in the input file
 template_inputs = {
 	'species':None,			# species file
 	'maxopd':None,			# maximum optical path difference (cm)
@@ -440,6 +230,10 @@ template_inputs = {
 	'spectrum': None,		# full path to the spectrum
 	'window_list':None,		# list of tuples for microwindow boundaries
 }
+
+# html code for the loading animation
+with open(os.path.join(static_path,'loader.html'),'r') as infile:
+	loader_css = infile.read().replace('\n','')
 
 ##################
 # Main functions #
@@ -456,13 +250,11 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 
 	status_div = curdoc().select_one({"name":"status_div"})
 
-	popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
+	popen = subprocess.Popen(cmd,stdout=subprocess.PIPE,stdin=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd,encoding='utf-8')
 	for elem in inputs:
 		popen.stdin.write('{}\n'.format(elem))
 	output, err = popen.communicate()
 	return_code = popen.wait()
-	#if return_code:
-	#	raise subprocess.CalledProcessError(return_code, cmd)
 	print(output)
 
 	undersampled = False
@@ -474,6 +266,9 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 	shift_too_big = False
 	if 'Shift too big!' in output:
 		shift_too_big = True
+	low_SNR = False
+	if 'insufficient SNR' in output:
+		low_SNR = True
 
 	output = output.splitlines()
 
@@ -485,7 +280,10 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 		status_div.text+='<br>- Shift too big'
 		print('Shift too big:',shift_too_big)
 		print('The app cannot handle the "Shift too big" warning')
-		return
+		return True
+	if low_SNR:
+		status_div.text+='<br>- <b>SNR too low</b> (<2000)'
+		return True
 
 	if True in [elem in output[-1] for elem in ["shutdown program", 'stop program']]:
 
@@ -525,8 +323,6 @@ def busy(func):
 	'''
 	def wrapper():
 		# show the loading animation for time consuming tasks
-		with open(os.path.join(static_path,'loader.html'),'r') as infile:
-			loader_css = infile.read().replace('\n',"")
 		curdoc().select_one({'name':'loader'}).text = loader_css
 
 		func() # run the decorated function
@@ -551,7 +347,11 @@ def get_inputs(spectrum,mode):
 		- window_list: list of microwindows that corresponds to the cell
 	'''
 
-	date,site,cell,MOPD,ev,num,ext = parse.parse(specname_fmt,spectrum)
+	try:
+		date,site,cell,MOPD,ev,num,ext = parse.parse(specname_fmt,spectrum)
+	except:
+		print('Error with filename',spectrum,'\nMust follow YYMMDD_site_cell_X_MOPD_num.dpt or YYMMDD_site_cell_X_MOPD_num.num for OPUS files')
+		sys.exit()
 
 	cell = cell.lower()
 	site = site.lower()
@@ -618,10 +418,10 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 
 	species = system_species[system][cell]
 
-	if system in ["Linux","Darwin"]:
-		spec_inp_path = '"'+os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt')+'"'
+	if system in ["Linux","Darwin"]: # there are "" around the file paths for linux
+		spec_inp_path = '"'+os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt')+'"'
 	elif system == "Windows":
-		spec_inp_path = os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt')
+		spec_inp_path = os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt')
 
 	template_inputs.update({
 		'species':species,										# species
@@ -631,7 +431,7 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		'N_windows':N_windows,
 		'MW_list':['MW'+str(i+1) for i in range(N_windows)],		
 		'regularisation':reg,									# regularisation factor (for both modulation and phase)
-		'spectrum': spec_inp_path,	# full path to the spectrum
+		'spectrum': spec_inp_path,								# full path to the spectrum
 		'temperature':'{:.2f}'.format(temperature),				# scanner temperature (K)
 		})
 
@@ -640,8 +440,8 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		newP = correct_Pressure(cell_map[cell][site]['effp_h35cl_296k'],temperature) # update the cell pressure
 		newcol = correct_column(newP,temperature,l=0.1) # update the cell column as described in the input file
 		print(newP,newcol)
-		#newP = cell_map[cell][site]['effp_h35cl_296k']  # uncomment to use the effective pressure from the TCCON wiki
-		newcol = cell_map[cell][site]['h35cl_column'] # uncomment to use the column from the TCCON wiki
+		#newP = cell_map[cell][site]['effp_h35cl_296k']  # uncomment to use the effective pressure from the TCCON wiki instead of the corrected pressure
+		newcol = cell_map[cell][site]['h35cl_column'] # uncomment to use the column from the TCCON wiki instead of the corrected column
 		print(newP,newcol)
 
 		template_inputs.update({
@@ -653,8 +453,8 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		newP = correct_Pressure(cell_map[cell][site]['effp_h37cl_296k'],temperature) # update the cell pressure
 		newcol = correct_column(newP,temperature,l=0.1) # update the cell column as described in the input file
 		print(newP,newcol)
-		#newP = cell_map[cell][site]['effp_h37cl_296k'] # uncomment to use the effective pressure from the TCCON wiki
-		newcol = cell_map[cell][site]['h37cl_column'] # uncomment to use the column from the TCCON wiki
+		#newP = cell_map[cell][site]['effp_h37cl_296k'] # uncomment to use the effective pressure from the TCCON wiki instead of the corrected pressure
+		newcol = cell_map[cell][site]['h37cl_column'] # uncomment to use the column from the TCCON wiki instead of the corrected column
 		print(newP,newcol)
 
 		template_inputs.update({
@@ -672,10 +472,10 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 			'column':'{:.4e}'.format(newcol),
 			'pressure':'{:.3f}'.format(newP),
 			})
-
+	
 	with open(os.path.join(wdir,'lft14.inp'),'w') as outfile: #rewrite input file
 		outfile.writelines(template_map[cell].render(**template_inputs).replace("\\n","\n"))
-
+	
 	curdoc().select_one({"name":"status_div"}).text+='<br>- Input file updated'
 	print('\n\t- Input file updated')
 
@@ -690,10 +490,11 @@ def setup_linefit():
 	status_div = curdoc().select_one({"name":"status_div"})
 
 	dum_fig = curdoc().select_one({"name":"dum_fig"})
-
-	if len(dum_fig.legend[0].items)>0:
+	
+	print(dum_fig.renderers[0].items)
+	if len(dum_fig.renderers[0].items)>0:
 		all_data['ID'] += 1
-
+	
 	curdoc().select_one({"name":"spec_input"}).js_on_change('value', CustomJS(args={'status_div':curdoc().select_one({"name":"status_div"})},code=spec_input_code))
 
 	spectrum = curdoc().select_one({"name":"spec_input"}).value
@@ -702,27 +503,6 @@ def setup_linefit():
 		mode = 'opus'
 	elif reg_dpt.match(spectrum):
 		mode = 'dpt'
-
-	if spectrum=='':
-		status_div.text = "Select a spectrum"
-		return
-
-	reg = curdoc().select_one({"name":"reg_input"}).value
-
-	try:
-		float(reg)
-	except:
-		status_div.text = "Regularisation factor must be a number"
-		return
-
-	dum_leg_labels = [elem.label['value'] for elem in dum_fig.legend[0].items]
-	already_done = [elem for elem in dum_leg_labels if ((spectrum.split('.')[0] in elem) and ('reg={}'.format(reg) in elem))]!=[]
-	if already_done:
-		status_div.text = "{} already analysed with reg={}".format(spectrum,reg)
-		return
-	
-	status_div.text = "<b>Now doing:</b> <br>{}<br>reg= {}".format(spectrum,reg)
-	print('\nNow doing',spectrum,'with reg=',reg)
 
 	if mode == 'dpt':
 		# preliminary check on the temp file to make sure it has the spectrum
@@ -738,15 +518,38 @@ def setup_linefit():
 			print(spectrum,'scanner temperature not listed in the temp file')
 			all_data['ID'] += -1
 			return
-
 	site,cell,MOPD,APT,temperature,window_list = get_inputs(spectrum,mode)
+
+	if spectrum=='':
+		status_div.text = "Select a spectrum"
+		return
+
+	reg_input = curdoc().select_one({"name":"reg_input"})
+
+	reg = reg_input.value # this won't be used for HCl cell tests
+
+	if reg!='TCCON':
+		try:
+			float(reg)
+		except:
+			status_div.text = "Regularisation factor must be a number"
+			return
+
+	dum_leg_labels = [elem.label['value'] for elem in dum_fig.renderers[0].items]
+	already_done = [elem for elem in dum_leg_labels if ((spectrum.split('.')[0] in elem) and ('reg={}'.format(reg) in elem))]!=[]
+	if already_done:
+		status_div.text = "{} already analysed with reg={}".format(spectrum,reg)
+		return
 	
+	status_div.text = "<b>Now doing:</b> <br>{}<br>reg= {}".format(spectrum,reg)
+	print('\nNow doing',spectrum,'with reg=',reg)
+
 	colo = check_colors(add_one=True)
 	
 	spectrum_path = os.path.join(spec_path,spectrum)
 	
 	if mode == 'dpt':
-		# check that the spectral range is ordered (dpt files are written with decreasing wavenumbers and linefit wants increasing wavenumbers)
+		# check that the spectral range is ordered (dpt files may be written with decreasing wavenumbers and linefit wants increasing wavenumbers)
 		# if it is not ordered, orders it.
 		
 		check_spectrum(spectrum_path,spectrum)
@@ -756,13 +559,15 @@ def setup_linefit():
 			check_spectrum(ref_path,'ref_'+spectrum)
 
 	# comment out to not ratio the spectrum, the temp file still needs to be in lft_app/spectra/cut and the spectrum will need to be directly in lft_app/spectra
-	ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) 
+	ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) # this does nothing but copy the spectrum to lft_app/spectra for HCl cells, because the ratioing will be done by Linefit in TCCON mode
 
 	# update the input file; make sure that it modifies everything that you need !
 	# the regularisation factors are updated from the browser
 	modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list)
 
-	run_linefit(cell)
+	exec_issue = run_linefit(cell) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
+	if exec_issue:
+		return
 
 	# store results in all_data and update plots
 	linefit_results(spectrum,colo)
@@ -801,7 +606,7 @@ def check_colors(add_one=False):
 
 def run_linefit(cell):
 	'''
-	Run linefit and printst he output in the terminal as it is running.
+	Run linefit and prints the output in the terminal as it is running.
 
 	Once for HCl cells
 	In a loop for HBr and N2O cells, until the pressure converges
@@ -812,7 +617,10 @@ def run_linefit(cell):
 	status_div.text+='<br>- Running linefit ...'
 	print('\n\t- Running linefit ...')
 	print('\t executing command {} in {}'.format(lft_command[0],wdir))
-	execute(lft_command,cwd=wdir)
+	exec_issue = execute(lft_command,cwd=wdir)
+
+	if exec_issue:
+		return True
 
 	if cell in ['n2o','hbr']:
 		iteration = 1
@@ -858,7 +666,9 @@ def run_linefit(cell):
 			# run a new iteration of linefit
 			status_div.text+='<br>- Running linefit iteration {}'.format(iteration)
 			print('\n\t- Running linefit iteration',iteration)
-			execute(lft_command,cwd=wdir)
+			exec_issue = execute(lft_command,cwd=wdir)
+			if exec_issue:
+				return True
 				
 		if conv:
 			print('\n\t- convergence after',iteration,'iterations')
@@ -889,7 +699,7 @@ def check_spectrum(spectrum_path,spectrum):
 
 def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 	'''
-	For HCl cells, fit a second order polynomial to a spectrum in order to ratio it to ~1
+	For HCl cells just copy the spectrum file from lft_app/spectra/cut to lft_app/spectra, the ratioing will be done by Linefit in TCCON mode
 
 	For N2O and HBr cells, use a background spectrum to do the ratio
 	'''
@@ -909,7 +719,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		y = opus_file.ydata[ID]
 		# cut the spectrum
 		if cell == 'hcl':
-			minwn,maxwn = (5200,5900)
+			minwn,maxwn = (5670,5805)
 		elif cell == 'n2o':
 			minwn,maxwn = (2100,2300)
 		elif cell == 'hbr':
@@ -918,20 +728,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		y = y[(x>=minwn) & (x<=maxwn)]
 		x = x[(x>=minwn) & (x<=maxwn)]
 	
-	if cell == 'hcl':
-		if 0.7<np.mean(y)<1.3: # spectrum was already ratioed
-			return
-
-		# resample_y_max takes the max y values for each interval of 14 wavenumbers, it avoids getting points in the lines themselves
-		resample_y_max = [max(y[(x<(start+15)) & (x>start)]) for start in range(int(x[0]),int(x[-1]),14)]
-		resample_x = np.array(range(int(x[0]),int(x[-1]),14))
-
-		fit = np.polyfit(resample_x,resample_y_max,2) # second order polynomial fit
-
-		# I substract the 0.0004 because the way I fit will always be a bit too high as it will include values above the base line
-		base_y = fit[0]*x**2+fit[1]*x+fit[2]-0.0004 # use the fit to get the fit line for each x
-
-	elif cell == 'hbr':
+	if cell == 'hbr':
 		ref_path = os.path.join(bkg_path,'ref_'+spectrum)
 		if mode == 'dpt':	
 			xref,yref = np.loadtxt(ref_path,unpack=True)
@@ -950,17 +747,19 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		# ratio the cell spectrum and background spectrum
 		y = y/yref
 		base_y = np.mean(y)
+		new_y = y/base_y # ratio to ~1
 
 	elif cell == 'n2o': # n2o spectra should be ratioed with their background in OPUS, then the resulting spectrum is saved in a .dpt file
 		# just take the average intensity to do the ratio
 		base_y = np.mean(y)
+	
+	if cell == 'hcl': # for HCl, the TCCON mode is used and Linefit will do the ratioing
+		new_y = y
+	else:
+		new_y = y/base_y # ratio to ~1
+		curdoc().select_one({"name":"status_div"}).text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
 
-	new_y = y/base_y # ratio to ~1
-
-	np.savetxt(os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
-
-	curdoc().select_one({"name":"status_div"}).text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
-
+	np.savetxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
 
 def linefit_results(spectrum,colo):
 	'''
@@ -1054,7 +853,7 @@ def linefit_results(spectrum,colo):
 		curdoc().select_one({"name":"status_div"}).text+='<br>- Adding spectrum'
 		print('\n\t- Adding spectrum')
 
-		x,y = np.loadtxt(os.path.join(app_path,'spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
+		x,y = np.loadtxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
 	 
 		all_data[test]['spec'] = {'x':x,'y':y}
 
@@ -1069,13 +868,25 @@ def linefit_results(spectrum,colo):
 	print('\n\t- Adding spectral fits with residuals')
 
 	mwfiles = [i for i in os.listdir(erg_path) if 'specre' in i]
-
+	
 	for it,mwfile in enumerate(mwfiles):
 		with open(os.path.join(erg_path,mwfile),'r') as infile:
 			content = infile.readlines()
 
-		content = np.array([[float(elem) for elem in line.split()] for line in content]).T
-
+		try:
+			content = np.array([[float(elem) for elem in line.split()] for line in content]).T
+		except:
+			new_content = []
+			for l,line in enumerate(content):
+				line = line.split()
+				new_content.append(line)
+				for e,elem in enumerate(line):
+					try:
+						new_content[l][e] = float(elem)
+					except:
+						new_content[l][e] = float(elem.replace('-','E-'))
+			content = np.array(new_content).T
+		
 		resid = 100*(content[1]-content[2])/content[2] # (measured-calculated)/calculated
 
 		all_data[test]['mw{}'.format(it+1)] = {'x':content[0],'meas':content[1],'calc':content[2],'resid':resid}
@@ -1091,13 +902,13 @@ def linefit_results(spectrum,colo):
 
 	avg_rms_div = curdoc().select_one({"name":"avg_rms_div"})
 	avg_rms_div.text = "Average rms of residuals = {:.5f}".format(all_data[test]['avg_rms_resid'])
-
+	
 	curdoc().select_one({"name":"meas_line"}).data_source.data.update(all_data[test]['mw1'])
 	curdoc().select_one({"name":"calc_line"}).data_source.data.update(all_data[test]['mw1'])
 	curdoc().select_one({"name":"resid_line"}).data_source.data.update(all_data[test]['mw1'])
 
 	# setup mw_buttons
-	MW_buttons = curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mwfiles))]
+	curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mwfiles))]
 
 	###############################
 	############################### Averaging Kernels
@@ -1233,7 +1044,7 @@ def update_doc():
 		curdoc().select_one({"name":"column_fig"}).scatter(x='x',y='y',color=colo,source=COL_source,name='{} column scatter'.format(test))
 		curdoc().select_one({"name":"series_fig"}).scatter(x='x',y='y',color=colo,size=5,source=series_source,name='{} series scatter'.format(test))
 
-	status_div.text = "Ready"
+	status_div.text = "<b>Ready</b>"
 
 def show_hide(attr,old,new,test):
 	'''
@@ -1261,7 +1072,7 @@ def update_legend(test):
 
 	legend = ME_fig.legend[0]
 
-	dum_fig.legend[0].items += legend.items
+	dum_fig.renderers[0].items += legend.items
 	dum_fig.renderers += [glyph]
 	
 	legend.visible = False
@@ -1581,6 +1392,22 @@ def update_dropdowns():
 	#update the dropdown of spectra
 	spec_input.options = ['']+[i for i in os.listdir(spec_path) if reg_dpt.match(i) or reg_opus.match(i)]	
 
+def check_cell(attr,old,new):
+	"""
+	if 'hcl' is in the spectrum name, this is the TCCON mode, so disable the input widget for regularisation
+	"""
+	reg_input = curdoc().select_one({"name":"reg_input"})
+	status_div = curdoc().select_one({"name":"status_div"})
+
+	status_div.text = "The regularisation factor is adjusted automatically in TCCON mode<br><b>Ready</b>"
+
+	if 'hcl' in new.lower():
+		reg_input.value = 'TCCON'
+		reg_input.disabled = True # deactivate the widget
+	else:
+		reg_input.value = '1.8' # some arbitrary default value
+		reg_input.disabled = False # activatet he widget
+
 def doc_maker():
 	'''
 	make the whole document
@@ -1597,6 +1424,8 @@ def doc_maker():
 	session_input = Select(title='Previous sessions:',width=150,options=['']+[i for i in os.listdir(save_path) if reg_npy.match(i)],css_classes=["spec_input"],name="session_input")
 	save_input = TextInput(title='Save name',value="_".join(str(datetime.now())[:-7].split()).replace(':','-'),css_classes=["save_input"],name="save_input")
 	loop_input = TextInput(title='Loop key',value="HCl_45",width=100,css_classes=["small_input"],name="loop_input")
+	# input callbacks
+	spec_input.on_change('value',check_cell)
 	# BUTTONS
 	lft_button = Button(label='Run linefit', width=80, css_classes=["custom_button"],name="lft_button")
 	save_button = Button(label='Save Session', width=90, css_classes=["custom_button"],name="save_button")
@@ -1617,7 +1446,7 @@ def doc_maker():
 	status_div = Div(text='Select a spectrum',width=300,name="status_div") # will display information on app status
 	cur_spec_div = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=400,name="cur_spec_div") # will display the current spectrum
 	cur_spec_div2 = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=400,name="cur_spec_div2") # duplicate widget for the averaging kernels panel
-	suptitle = Div(text='<font size=5 color="teal"><b>Linefit 14.5</b></font>',width=150,name='suptitle') # big title displayed at the top of the webpage
+	suptitle = Div(text='<font size=5 color="teal"><b>Linefit 14.7</b></font>',width=150,name='suptitle') # big title displayed at the top of the webpage
 	# Loader gif
 	loader = Div(text="",width=40,height=40,name="loader")
 	# Spacing DIVs
@@ -1698,13 +1527,19 @@ def doc_maker():
 	dum_fig = figure(plot_width=265,plot_height=850,outline_line_alpha=0,toolbar_location=None,name='dum_fig')
 	dum_fig.x_range.end = 1005
 	dum_fig.x_range.start = 1000
-	dum_fig.renderers = [Legend(click_policy='hide',location='top_left',border_line_alpha=0)]
+	dum_fig.grid[0].visible = False
+	dum_fig.ygrid[0].visible = False
+	dum_fig.xaxis[0].visible = False
+	dum_fig.yaxis[0].visible = False
+	dum_fig.renderers = [Legend(click_policy='hide',location='top_left',border_line_alpha=0,name='dum_fig_leg')]
 
 	## Laying out plot objects
 	# Grid for modulation efficiency, phase error, column scale factor, and ME at MOPD time series
-	MEPECOL_grid = gridplot([[space_div2],[ME_fig],[PE_fig],[column_fig],[series_fig]],toolbar_location='left',name="MEPECOL_grid")
+	MEPECOL_grid = gridplot([[space_div2],[ME_fig],[PE_fig],[column_fig],[series_fig]],toolbar_location='left')
+	MEPECOL_grid.name = "MEPECOL_grid"
 	# Panel for the MEPECOL grid and the legend
-	MEPECOL_panel = Panel(child=gridplot([[MEPECOL_grid,dum_fig]],toolbar_location=None),title='Summary',name="MEPECOL_panel")
+	MEPECOL_panel = Panel(child=gridplot([[MEPECOL_grid,dum_fig]],toolbar_location=None),title='Summary')
+	MEPECOL_panel.name = "MEPECOL_panel"
 	
 	# Subgrid with the microwindow and residuals figures
 	mw_grid = gridplot([[mw_fig],[resid_fig],[avg_rms_div]],toolbar_location=None)
@@ -1735,13 +1570,16 @@ def doc_maker():
 	button_box = Column(children=[widgetbox(width=255)],name='button_box')
 
 	# put the widget_box in a grid
-	side_box = gridplot([[widget_box]],toolbar_location=None,name="side_box")
+	side_box = gridplot([[widget_box]],toolbar_location=None)
+	side_box.name = "side_box"
 
 	# put the page title and the final Tabs() in a grid
-	sub_grid = gridplot([[suptitle],[final]],toolbar_location=None,name="sub_grid")
+	sub_grid = gridplot([[suptitle],[final]],toolbar_location=None)
+	sub_grid.name = "sub_grid"
 
 	# put 'sub_grid', the button_box, and 'side_box' in a grid
-	grid = gridplot([[sub_grid,button_box,side_box]],toolbar_location=None,name="grid")
+	grid = gridplot([[sub_grid,button_box,side_box]],toolbar_location=None)
+	grid.name = "grid"
 
 	# add that grid to the document
 	curdoc().add_root(grid)
@@ -1776,7 +1614,7 @@ def linefit_loop():
 	status_div.text = "{} loop finished, {} spectra analysed".format(keyword,len(select_spectra))
 
 # this is displayed in the browser tab
-curdoc().title = 'LINEFIT 14.5'
+curdoc().title = 'LINEFIT 14.7'
 
 # fill the document
 doc_maker()

@@ -4,16 +4,16 @@ Linefit is an instrument line shape-calculating program written by Frank Hase at
 
 	Frank Hase, Thomas Blumenstock, and Clare Paton-Walsh, Analysis of the Instrumental Line Shape of High-Resolution Fourier Transform IR Spectrometers with Gas Cell Measurements and New Retrieval Software, Applied Optics, Vol. 38, Issue 15, pp. 3417-3422 (1999)
 
-This app can be used to run linefit 14.5 and display its outputs.
+This app can be used to run linefit 14.7 and display its outputs.
 
-This app requires python 2.7.x (not tested with python 3.x) with bokeh installed.
+This app works with python 3.x and with bokeh > 1.1.0 installed.
 
 	Bokeh: https://bokeh.pydata.org/en/latest/docs/installation.html
 
 ### Python ###
 
 I suggest downloading python from https://www.anaconda.com/download/
-Choose your operating system and get Python2.7
+Choose your operating system and get Python3.7
 
 To install bokeh use the command (with windows you need to run the terminal as administator):
 
@@ -31,7 +31,7 @@ After installing anaconda, you should only need to install the "parse" and "re" 
 
 If you encounter error messages related to bokeh when running the app, you can try to revert to an earlier version of the package with:
 
-	conda install bokeh=0.12.10
+	conda install bokeh=1.1.0
 
 ### How to use this app ###
 
@@ -72,13 +72,13 @@ Using .dpt files requires extra steps.
 
 - To run the app, navigate to the linefit/lft145/ directory in your terminal and use the command
 
-	bokeh serve --show lft_app --args light
+	bokeh serve --show lft_app
 
 The --show option will pop up the browser.
 
-By default the spectrum itself will be plotted in the browser and also saved in the data dictionary. This can lead to very large files and more loading time.
+By default the spectrum itself will not be plotted in the browser and also not saved in the data dictionary as it can lead to very large files and more loading time.
 
-The --args light option will not display or save the whole spectrum.
+The --args spec option will display and save the whole spectrum.
 
 While the server is running, the app will be available in the browser at localhost:5006/lft_app
 
@@ -91,10 +91,8 @@ There are two example spectra from Eureka in lft_app/spectra/cut/ so the app can
 
 Spectra should be ratioed to ~1 to be used with the linefit extended mode:
 
-- HCl cells, done in the code: 
-	- no background
-	- In the code I fit a 2nd order polynomial to the spectrum without the lines and use that to ratio the spectrum to normalize it to ~1 (seems more consistent than using a fixed numbers)
-	- For dpt spectra I typically cut them between 5200-5900 cm-1
+- HCl cells, done in linefit: 
+	- The TCCON mode is used for HCl cells and linefit will take care of the ratioing
 
 - HBr cells, done in the code:
 	- background
@@ -132,6 +130,10 @@ Dropdown to select a spectrum file from the lft_app/spectra/cut/ directory
 ##### Regularisation factor #####
 
 Textinput to quickly change the regularisation factor (same number for reg_mod and reg_phase)
+
+When selected a HCl spectrum, this widget is disabled and its value set to 'TCCON'
+
+The HCl cell tests are processed with the TCCON mode of linefit 14.7, the regularisation factor is adjusted during the processing and will be output in /ergs/TCCON.dat
 
 ##### Run linefit #####
 
@@ -193,19 +195,25 @@ You can click or select the scatter points to highlight the correspond averaging
 
 N2O and HBr cell spectra are processed in a loop until the cell pressure converges; this usually take 2-3 linefit runs.
 
+For HCl cell spectra this is done directly in linefit with the TCCON mode, so it takes longer to process these spectra with linefit 14.7 compared to 14.5
+
 The python dictionaries saved in lft_app/saved_sessions/ can be merged with a utility program lft_app/utils/merge_sessions.py
 
 The merged file can then be loaded from the browser.
 
 ### DISCLAIMER ###
 
-If any warning or error message is given by linefit, this app will hang, you should then run linefit from the terminal to figure out what the problem is.
+This app handles a limited number of warning/error messages that can be given by linefit.
+
+If any other warning or error message is given by linefit, this app will hang, you should then run linefit from the terminal to figure out what the problem is.
 
 The app may hang if there is any convergence problem.
 
-There will be more detailed outputs in the terminal than in the browser.
+There will be more detailed outputs in the terminal than in the browser, the actual linefit messages will be in the terminal.
 
 If a significant spectral detuning is detected, the app will use it to update the input file and re-run linefit.
+
+For HCl cells the spectral detuning is corrected directly by linefit TCCON mode before the fitting.
 
 ### Contact ###
 

@@ -36,9 +36,10 @@ ILS model:
     1: Use simple ILS model
     2: Use TCCON ILS model
     3: Use extended ILS model
+    4: TCCON HCl cell analysis (extended IlS + prescribed parameter settings)
 
 $
-3
+4
 
 
 
@@ -51,25 +52,37 @@ Assume common spectral abscissa for all species (T/F)?
 $
 .false.
 .false.
-.true.
+.false.
 
 
 number of microwindows (max. 26)
 
 $
-{{N_windows}}
+1
 1.0d-3
-{% for window in window_list -%}
-{{window}}\n
-{%- endfor %}
+(5675.00,5800.20)
 
 
 deweighting regions for each MW
 
 $
-{% for window in window_list -%}
-0\n
-{%- endfor %}
+16
+(5677.8,5679.1),0.001
+(5689.0,5692.6),0.001
+(5696.9,5698.1),0.001
+(5708.6,5709.9),0.001
+(5721.9,5725.8),0.001
+(5732.0,5733.0),0.001
+(5740.8,5743.6),0.001
+(5747.3,5748.1),0.001
+(5757.0,5758.4),0.001
+(5759.5,5762.1),0.001
+(5771.5,5774.2),0.001
+(5783.5,5785.6),0.001
+(5792.6,5793.4),0.001
+(5797.1,5797.9),0.001
+(5798.3,5798.8),0.001
+(5799.2,5799.6),0.001
 
 
 Resampling of measured spectra? (T/F)
@@ -104,32 +117,25 @@ species parameters:
 
 $
 {{temperature}},.false.,{{column}},{{pressure}},.false.,{{pressure}},0.0075
-{% for window in window_list -%}
-.true.,1.0,0.0\n
-{%- endfor %}{{temperature}},.false.,{{column_2}},{{pressure_2}},.false.,{{pressure_2}},0.0075
-{% for window in window_list -%}
-.true.,1.0,0.0\n
-{%- endfor %}
+.true.,1.0,0.0
+{{temperature}},.false.,{{column_2}},{{pressure_2}},.false.,{{pressure_2}},0.0075
+.true.,1.0,0.0
 
 
 MW dependent parameters I: (first-guess values in case of retrieval)
     for each microwindow:
         number of baseline parameters, values of baseline parameters        
 $
-{% for window in window_list -%}
-2  1.0  1.0\n
-{%- endfor %}
+5  1.0  1.0  1.0  1.0  1.0
 
 
 MW dependent parameters II: (first-guess values in case of retrieval)
     for each microwindow and species
         number of spectral abscissa parameters, values of spectral abscissa parameters ...
 $
-{% for MW in MW_list -%}
-{{MW}}
-1  0.0d0
-1  0.0d0\n
-{%- endfor %}
+MW1
+8  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
+8  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0
 
 
 channeling (first-guess values in case of retrieval)
@@ -228,9 +234,9 @@ Reg Modulation (dev+smooth), Reg Phase (dev+smooth),reg T(dev)
 Reg column (dev+smooth, per species), reg spectral scale (mean, per species)
 
 $
-1.0e4,{{regularisation}},0.0,{{regularisation}},0.0
-0.0,0.1,0.0001
-0.0,0.1,0.0001
+1.0e4,0.3,1.0e4,0.3,0.0
+0.0,0.0,0.0001
+0.0,0.0,0.0001
 
 
 Parameter apo, Parameter Phase
@@ -319,7 +325,7 @@ Phase: Position-dependent regularisation strength (dev+smooth)
 (only used in case of extended ILS model: 20 values)
 
 $
-0.0000,1.0000
+1.0000,1.0000
 0.0000,0.9955
 0.0000,0.9822
 0.0000,0.9603
@@ -338,4 +344,4 @@ $
 0.0000,0.3160
 0.0000,0.2724
 0.0000,0.2327
-0.0000,0.1970\n
+0.0000,0.1970

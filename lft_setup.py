@@ -15,7 +15,7 @@ def site_data():
 					'et':418.0, # East Trout Lake
 					'ra':418.0, # St Denis
 					'lr':418.0, # new Lauder
-					'll':418.0, # old Lauder					
+					'll':418.0, # old Lauder
 					}
 
 	return data
@@ -197,61 +197,12 @@ def n2o_cells():
 def window_data():
 	"""
 	List of windows to be used by linefit for each cell
-
-	For each cell the main code uses by default:
-
-	window_dict['hcl'] for hcl
-	window_dict['n2o'] for n2o
-	window_dict['hbr'] for hbr
-
-	The use of the custom window lists is not yet supported
 	"""
 
 	window_dict = {}
 
-	# custom MIR microwindows for HCl
-	window_dict['hcl_test'] = [
-					'(2843.1,2844.1)', # 1
-					#'(2596.8,2597.8)',
-					#'(2625.2,2626.2)',
-					'(2862.5,2863.5)', # 2
-					'(2864.6,2865.6)', # 3
-					'(2903.6,2904.6)', # 4
-					'(2905.7,2906.7)', # 5
-					'(2923.2,2924.2)', # 6
-					'(2923.2,2924.2)', # 7
-					'(2923.2,2924.2)', # 8
-					'(2925.4,2926.4)', # 9
-					'(2960.6,2961.6)', # 10
-					#'(2962.8,2963.8)', # 11
-					'(3011.6,3012.6)', # 12
-					'(3013.9,3014.9)', # 13
-					'(3027.3,3028.3)', # 14
-					#'(3029.6,3030.6)', # 15
-					]
-
-	# NIR microwindows for HCl
-	window_dict['hcl'] = [	
-					'(5683.0,5684.0)', # 1 
-					'(5687.1,5688.1)', # 2
-					'(5701.5,5702.5)', # 3
-					'(5705.6,5706.6)', # 4
-					'(5718.7,5719.7)', # 5 
-					'(5734.6,5735.6)', # 6 
-					'(5738.8,5739.8)', # 7
-					'(5749.3,5750.3)', # 8
-					'(5753.5,5754.5)', # 9
-					'(5762.7,5763.7)', # 10
-					'(5766.9,5767.9)', # 11
-					'(5774.8,5775.8)', # 12
-					'(5779.0,5780.0)', # 13
-					]
-					
-	# NIR wide windows for HCl
-	window_dict['hcl_1mw'] = [
-					(5675.00,5799.99),	# 1
-					(5712.0,5782.0),	# 2
-					]
+	# NIR window for HCl with linefit 14.7; instead of multiple microwindows there is one big region that will have deweighted regions
+	window_dict['hcl'] = ['(5675.00,5800.20)',]
 
 	# MIR microwindows for N2O
 	window_dict['n2o'] = [
