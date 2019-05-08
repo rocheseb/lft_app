@@ -94,6 +94,7 @@ Spectra should be ratioed to ~1 to be used with the linefit extended mode:
 - HCl cells, done in the code: 
 	- no background
 	- In the code I fit a 2nd order polynomial to the spectrum without the lines and use that to ratio the spectrum to normalize it to ~1 (seems more consistent than using a fixed numbers)
+	- For dpt spectra I typically cut them between 5200-5900 cm-1
 
 - HBr cells, done in the code:
 	- background
@@ -101,12 +102,14 @@ Spectra should be ratioed to ~1 to be used with the linefit extended mode:
 	- put the HBr background files in lft_app/spectra/background/
 	- the spectra are ratioed with the background
 	- the resulting ratioed spectrum is ratioed with its own average to normalize it to ~1
+	- For dpt spectra I typically cut them between 2500-2700 cm-1
 
 - N2O cells, done by you ! :
 	- background, but different resolution from the spectrum
 	- the rationg of spectrum with background shoul be done in OPUS
 	- the resulting spectrum should be placed in lft_app/spectra/cut
 	- it will be ratioed with its own average to normalize it to ~ 1
+	- For dpt spectra I typically cut them between 2100-2300 cm-1
 
 ### User interface ###
 
