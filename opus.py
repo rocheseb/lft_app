@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function # allows the use of Python 3.x print function in python 2.x code so that print('a','b') prints 'a b' and not ('a','b')
+
 """
 This code contain a class that can be used to read Bruker OPUS files.
 
@@ -100,9 +102,9 @@ class Opus:
 
             if not (cdat[0] == magic):
 
-                print "Magic number mismatch"
+                print("Magic number mismatch")
 
-            #print cdat,cdat[0],magic
+            #print(cdat,cdat[0],magic)
 
             fid.read(8)  # skip 8 bytes of version info
 
@@ -119,12 +121,12 @@ class Opus:
             ndb = cdat[2]  # actual number of entries in directory block
 
             if ndb > mndb:
-                print "Invalid file structure: ndb > mndb"
+                print("Invalid file structure: ndb > mndb")
                 fid.close()
                 return
 
             elif ndb < 2:
-                print "The file appears to contain no data"
+                print("The file appears to contain no data")
                 fid.close()
                 return
 
@@ -141,7 +143,7 @@ class Opus:
                 cbin = fid.read(12)  # Entry contains (type, subtype, ???, length(units of int32), pointer(in bytes))
 
                 if len(cbin) != 12:
-                    print "Invalid directory entry in file: {file}".format(file=self.file)
+                    print("Invalid directory entry in file: {file}".format(file=self.file))
                     return
 
                 cdat = struct.unpack('BBHII', cbin)  # each entry refers to a block further down in the binary file
@@ -155,7 +157,7 @@ class Opus:
                     file_size_from_dir = cur_size
 
             if file_size_from_dir > file_size:  # check if the file is big enough to hold all the promised data
-                print "File size is too small: {file}".format(file=self.file)
+                print("File size is too small: {file}".format(file=self.file))
                 return
 
             parameters = []
@@ -181,7 +183,7 @@ class Opus:
                         cbin = fid.read(8)
 
                         if len(cbin) != 8:
-                            print "Invalid parameter entry, skipping remaider of block"
+                            print("Invalid parameter entry, skipping remaider of block")
                             break
 
                         cdat = struct.unpack('ccccHH', cbin)  # H = unsighned short (2 bytes)
@@ -225,13 +227,13 @@ class Opus:
                             pval = 0
 
                         elif ptype > 16:
-                            print "Invalid parameter type, skipping remainder of block"
+                            print("Invalid parameter type, skipping remainder of block")
                             break
 
                         else:  # Unknown type
 
                             fid.read(2*plen)  # skip the entry
-                            print "Unknown parameter type, it will be ignored"
+                            print("Unknown parameter type, it will be ignored")
                             continue
 
                         if opusdir[bid][0] in [23]:  # we treat data parameter blocks differently
