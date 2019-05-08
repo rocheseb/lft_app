@@ -491,7 +491,6 @@ def setup_linefit():
 
 	dum_fig = curdoc().select_one({"name":"dum_fig"})
 	
-	print(dum_fig.renderers[0].items)
 	if len(dum_fig.renderers[0].items)>0:
 		all_data['ID'] += 1
 	
