@@ -10,6 +10,8 @@ This app works with python 3.x and with bokeh > 1.1.0 installed.
 
 	Bokeh: https://bokeh.pydata.org/en/latest/docs/installation.html
 
+There are issues with the latest versions of Tornado, the apps works fine with Tornado 4.5.2
+
 ### Python ###
 
 I suggest downloading python from https://www.anaconda.com/download/
