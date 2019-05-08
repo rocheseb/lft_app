@@ -1,11 +1,11 @@
-.custom_button button.bk-bs-btn.bk-bs-btn-default  {
+.custom_button button.bk.bk-btn.bk-btn-default {
 	border:none;
 	background-color: lightblue;
 	color:teal;
 	font-weight: bold;
 }
 
-.remove_button button.bk-bs-btn.bk-bs-btn-default  {
+.remove_button button.bk.bk-btn.bk-btn-default {
 	border:none;
 	color:red;
 	font-weight: bold;
@@ -16,14 +16,14 @@ label {
 	color:teal;
 }
 
-.side_widgets div.bk-widget.bk-layout-fixed.spec_input select {
+.side_widgets div.bk.bk-input-group select {
 	width:225px;
 }
 
-.side_widgets div.bk-widget-form-group.bk-layout-fixed.small_input input {
+.small_input div.bk.bk-input-group input {
 	width:100px;
 }
 
-.side_widgets div.bk-widget-form-group.bk-layout-fixed.save_input input {
+.save_input div.bk.bk-input-group input {
 	width:160px;
 }
