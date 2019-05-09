@@ -390,7 +390,7 @@ def get_inputs(spectrum,mode):
 		temperature = parameters['TSC']+273.15
 		APT = float(parameters['APT'].split()[0])
 		site_data['FOC'][site] = parameters['FOC'] # if it existed, the value from lft_setup will be overwritten
-
+	
 	return site,cell,str(MOPD),APT,temperature,window_list
 
 def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
@@ -975,19 +975,22 @@ def add_button(test):
 	'''
 	global all_data
 
-	button = Button(label=test,width=180)
+	test_button = Button(label=test,width=180)
 	remove_button = Button(label='X',width=30,tags=[test],css_classes=["remove_button"])
 
 	button_box = curdoc().select_one({"name":"button_box"})
-	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[button])])]
 
-	all_data['cur_clicks'] = [0 for i in range(len(button_box.children)-1)]
-	all_data['prev_clicks'] = [0 for i in range(len(button_box.children)-1)]
+	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
+	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
 
-	button.on_click(change_spectrum)
-	remove_button.on_click(remove_test)
+	# reset the click counts
+	all_data['cur_clicks'] = [button.clicks for button in button_list]
+	all_data['prev_clicks'] = [button.clicks for button in button_list]
 
-def remove_test():
+	test_button.on_change('clicks',change_spectrum)
+	remove_button.on_change('clicks',remove_test)
+
+def remove_test(attr,old,new):
 	'''
 	remove a test from all_data and remake the document
 	'''
@@ -995,13 +998,13 @@ def remove_test():
 	global all_data
 
 	button_box = curdoc().select_one({"name":"button_box"})
+	button_list = [row.children[0].children[0] for row in button_box.children[1:]]
 
-	for row in button_box.children[1:]:
-		elem = row.children[0].children[0].children[0]
-		if elem.clicks==1:
+	for button in button_list:
+		if button.clicks==1:
 			break
 
-	test = elem.tags[0]
+	test = button.tags[0]
 
 	del all_data[test]
 
@@ -1070,12 +1073,10 @@ def update_legend(test):
 	glyph = curdoc().select_one({'name':'{} ME line'.format(test)})
 
 	legend = ME_fig.legend[0]
-
-	dum_fig.renderers[0].items += legend.items
+	dum_fig.renderers[0].items = legend.items
 	dum_fig.renderers += [glyph]
 	
 	legend.visible = False
-	ME_fig.renderers = [i for i in ME_fig.renderers if type(i)!=bokeh.models.annotations.Legend]
 
 def update_colors():
 	'''
@@ -1095,7 +1096,7 @@ def update_colors():
 		curdoc().select_one({'name':'{} column scatter'.format(test)}).glyph.fill_color = colo
 		curdoc().select_one({'name':'{} series scatter'.format(test)}).glyph.fill_color = colo
 
-def change_spectrum():
+def change_spectrum(attr,old,new):
 	'''
 	callback for the spectrum buttons in 'button_box'
 	update the plots in 'ils_fits_grid' to correspond to the desired spectrum
@@ -1103,19 +1104,26 @@ def change_spectrum():
 	global all_data, ignore_spec
 
 	button_box = curdoc().select_one({"name":"button_box"})
+	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
 
 	# list of current number of clicks for each spectrum button (including the one that just got clicked)
-	all_data['cur_clicks'] = [row.children[1].children[0].children[0].clicks for row in button_box.children[1:]]
+	all_data['cur_clicks'] = [button.clicks for button in button_list]
 
 	# compare cur_clicks to prev_clicks to know which button has just been clicked
 	for i in range(len(all_data['cur_clicks'])):
 		if all_data['cur_clicks'][i]!=all_data['prev_clicks'][i]:
-			test = button_box.children[1:][i].children[1].children[0].children[0].label
+			test = button_list[i].label
 	# set prev_clicks equal to cur_clicks 
 	all_data['prev_clicks'] = [i for i in all_data['cur_clicks']]
 
-	curdoc().select_one({"name":"cur_spec_div"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
-	curdoc().select_one({"name":"cur_spec_div2"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
+	resid_panel_title = curdoc().select_one({"name":"cur_spec_div"})
+	AK_panel_title = curdoc().select_one({"name":"cur_spec_div2"})
+
+	if test in resid_panel_title.text: # if the button of an already selected test was clicked, do nothing
+		return
+
+	resid_panel_title.text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
+	AK_panel_title.text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
 	
 	# Select microwindow and residuals figures
 	mw_fig = curdoc().select_one({"name":"mw_fig"})
