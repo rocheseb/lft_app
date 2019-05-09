@@ -187,8 +187,8 @@ class Opus:
                             break
 
                         cdat = struct.unpack('ccccHH', cbin)  # H = unsighned short (2 bytes)
-
-                        pname = ''.join(cdat[0:3])  # parameter name
+                        
+                        pname = ''.join([elem.decode('utf-8') for elem in cdat[0:3]])  # parameter name
 
                         if pname.lower() == "end":  # skip to the next block when we reach then END entry
 
@@ -204,7 +204,7 @@ class Opus:
 
                             cdat = struct.unpack('c'*2*plen, cbin)
 
-                            pval = ''.join(cdat).split('\x00')[0]  # String ends at first ASCII char 0
+                            pval = ''.join([elem.decode('utf-8') for elem in cdat]).split('\x00')[0]  # String ends at first ASCII char 0
 
                         elif ptype == 0 and plen == 2:  # Int32
 
