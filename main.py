@@ -277,27 +277,27 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 	if spectral_detuning:
 		print('Significant spectral detuning:',spectral_detuning)
 	if shift_too_big:
-		status_div.text+='<br>- Shift too big'
+		status_div.text += '<br>- Shift too big'
 		print('Shift too big:',shift_too_big)
 		print('The app cannot handle the "Shift too big" warning')
 		return True
 	if low_SNR:
-		status_div.text+='<br>- <b>SNR too low</b> (<2000)'
+		status_div.text += '<br>- <b>SNR too low</b> (<2000)'
 		return True
 
 	if True in [elem in output[-1] for elem in ["shutdown program", 'stop program']]:
 
 		if undersampled and not spectral_detuning and not shift_too_big:
-			status_div.text+='<br>- Spectrum undersampled'
-			status_div.text+='<br>- Rerun linefit and ignore warning'
+			status_div.text += '<br>- Spectrum undersampled'
+			status_div.text += '<br>- Rerun linefit and ignore warning'
 			execute(cmd,cwd=cwd,inputs=[1])
 		else:
 			
 			if spectral_detuning:
 				spectral_detuning = float(output[-2])
 						
-				status_div.text+='<br>- Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
-				status_div.text+='<br>- Rerun linefit with spectral detuning corrected'
+				status_div.text += '<br>- Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
+				status_div.text += '<br>- Rerun linefit with spectral detuning corrected'
 
 				input_file = os.path.join(wdir,'lft14.inp')
 				with open(input_file,'r') as infile:
@@ -369,7 +369,7 @@ def get_inputs(spectrum,mode):
 		print("\nCheck that the cell information for the site is entered correctly in lft_setup.py")
 		curdoc().select_one({"name":"status_div"}).text += '<br>- Site not recognized'
 		sys.exit()
-	print(site)
+	print('\nSite:',cell_map[cell][site]['location'])
 
 	if mode == 'dpt':
 		#get the temperature and aperture size
@@ -439,10 +439,10 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		# HCl35
 		newP = correct_Pressure(cell_map[cell][site]['effp_h35cl_296k'],temperature) # update the cell pressure
 		newcol = correct_column(newP,temperature,l=0.1) # update the cell column as described in the input file
-		print(newP,newcol)
+		#print(newP,newcol)
 		#newP = cell_map[cell][site]['effp_h35cl_296k']  # uncomment to use the effective pressure from the TCCON wiki instead of the corrected pressure
 		newcol = cell_map[cell][site]['h35cl_column'] # uncomment to use the column from the TCCON wiki instead of the corrected column
-		print(newP,newcol)
+		#print(newP,newcol)
 
 		template_inputs.update({
 				'column':'{:.4e}'.format(newcol),						# column density of first gas
@@ -452,10 +452,10 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		# HCl37
 		newP = correct_Pressure(cell_map[cell][site]['effp_h37cl_296k'],temperature) # update the cell pressure
 		newcol = correct_column(newP,temperature,l=0.1) # update the cell column as described in the input file
-		print(newP,newcol)
+		#print(newP,newcol)
 		#newP = cell_map[cell][site]['effp_h37cl_296k'] # uncomment to use the effective pressure from the TCCON wiki instead of the corrected pressure
 		newcol = cell_map[cell][site]['h37cl_column'] # uncomment to use the column from the TCCON wiki instead of the corrected column
-		print(newP,newcol)
+		#print(newP,newcol)
 
 		template_inputs.update({
 			'column_2':'{:.4e}'.format(newcol),	# column density of second gas
@@ -494,7 +494,7 @@ def setup_linefit():
 	if len(dum_fig.renderers[0].items)>0:
 		all_data['ID'] += 1
 	
-	curdoc().select_one({"name":"spec_input"}).js_on_change('value', CustomJS(args={'status_div':curdoc().select_one({"name":"status_div"})},code=spec_input_code))
+	curdoc().select_one({"name":"spec_input"}).js_on_change('value', CustomJS(args={'status_div':status_div},code=spec_input_code))
 
 	spectrum = curdoc().select_one({"name":"spec_input"}).value
 
@@ -534,6 +534,7 @@ def setup_linefit():
 			status_div.text = "Regularisation factor must be a number"
 			return
 
+	# if the spectrum was already analysed with the given inputs, do nothing
 	dum_leg_labels = [elem.label['value'] for elem in dum_fig.renderers[0].items]
 	already_done = [elem for elem in dum_leg_labels if ((spectrum.split('.')[0] in elem) and ('reg={}'.format(reg) in elem))]!=[]
 	if already_done:
@@ -558,7 +559,9 @@ def setup_linefit():
 			check_spectrum(ref_path,'ref_'+spectrum)
 
 	# comment out to not ratio the spectrum, the temp file still needs to be in lft_app/spectra/cut and the spectrum will need to be directly in lft_app/spectra
-	ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) # this does nothing but copy the spectrum to lft_app/spectra for HCl cells, because the ratioing will be done by Linefit in TCCON mode
+	spec_not_found = ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) # this does nothing but copy the spectrum to lft_app/spectra for HCl cells, because the ratioing will be done by Linefit in TCCON mode
+	if spec_not_found:
+		return
 
 	# update the input file; make sure that it modifies everything that you need !
 	# the regularisation factors are updated from the browser
@@ -566,12 +569,11 @@ def setup_linefit():
 
 	exec_issue = run_linefit(cell) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
 	if exec_issue:
+		status_div.text += "<br><b>PROBLEM !</b>"
 		return
 
 	# store results in all_data and update plots
 	linefit_results(spectrum,colo)
-
-	curdoc().select_one({'name':'status_div'}).text += "<br><b>DONE</b>"
 
 def check_colors(add_one=False):
 	'''
@@ -613,7 +615,7 @@ def run_linefit(cell):
 
 	status_div = curdoc().select_one({"name":"status_div"})
 
-	status_div.text+='<br>- Running linefit ...'
+	status_div.text += '<br>- Running linefit ...'
 	print('\n\t- Running linefit ...')
 	print('\t executing command {} in {}'.format(lft_command[0],wdir))
 	exec_issue = execute(lft_command,cwd=wdir)
@@ -663,7 +665,7 @@ def run_linefit(cell):
 				content = outfile.writelines(content)
 
 			# run a new iteration of linefit
-			status_div.text+='<br>- Running linefit iteration {}'.format(iteration)
+			status_div.text += '<br>- Running linefit iteration {}'.format(iteration)
 			print('\n\t- Running linefit iteration',iteration)
 			exec_issue = execute(lft_command,cwd=wdir)
 			if exec_issue:
@@ -671,10 +673,10 @@ def run_linefit(cell):
 				
 		if conv:
 			print('\n\t- convergence after',iteration,'iterations')
-			status_div.text+='<br>- pressure converged'
+			status_div.text += '<br>- pressure converged'
 		else:
 			print('\n\t- no convergence')
-			status_div.text+='<br>- pressure <b>did not<b> converge'
+			status_div.text += '<br>- pressure <b>did not<b> converge'
 
 def check_spectrum(spectrum_path,spectrum):
 	'''
@@ -703,6 +705,8 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 	For N2O and HBr cells, use a background spectrum to do the ratio
 	'''
 
+	status_div = curdoc().select_one({"name":"status_div"})
+
 	if mode == 'dpt':
 		x,y = np.loadtxt(spectrum_path,unpack=True)	
 	elif mode == 'opus':
@@ -712,8 +716,13 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		try:
 			ID = subIDs.index(136)
 		except ValueError:
-			ID = subIDs.index(4)
-		print(ID)
+			try:
+				ID = subIDs.index(4)
+			except:
+				status_div.text = '\nCannot find the spectrum in {}'.format(spectrum)
+				print('\nCannot find the spectrum in {}'.format(spectrum))
+				return True
+
 		x = [elem for elem in opus_file.xdata if elem[0]!=0][0] # need to check if this always corresponds to the correct data block
 		y = opus_file.ydata[ID]
 		# cut the spectrum
@@ -756,7 +765,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		new_y = y
 	else:
 		new_y = y/base_y # ratio to ~1
-		curdoc().select_one({"name":"status_div"}).text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
+		status_div.text += '<br>- Spectrum ratioed to ~{:.4f}'.format(np.mean(new_y))
 
 	np.savetxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),np.transpose([x,new_y]),fmt='%10.5f\t%.5f') # write the ratioed spectrum in lft_app/spectra
 
@@ -767,8 +776,12 @@ def linefit_results(spectrum,colo):
 
 	global all_data, ignore_spec
 
+	status_div = curdoc().select_one({"name":"status_div"})
+
 	# string containing info on the current spectrum + current regularisation factor
 	test = '{} reg={}'.format(spectrum.split('.')[0],curdoc().select_one({'name':'reg_input'}).value)
+
+	add_button(test)
 
 	# Add a new entry in the all_data dictionary
 	all_data[test] = {'statevec':0,'ILS':0,'AK':0,'mw1':0,'mw2':0,'mw3':0,'mw4':0,'mw5':0,'mw6':0,'mw7':0,'mw8':0,'mw9':0,'mw10':0,'mw11':0,'mw12':0,'mw13':0,}
@@ -776,11 +789,10 @@ def linefit_results(spectrum,colo):
 	# Update the title in the ils_fits_panel and ak_panel
 	curdoc().select_one({"name":"cur_spec_div"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
 	curdoc().select_one({"name":"cur_spec_div2"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
-	# Update status
-	curdoc().select_one({"name":"status_div"}).text+='<br>- Adding ME and PE plot'
-	
+
 	###############################
 	############################### Modulation Efficiency and Phase Error
+	status_div.text += '<br>- Adding ME and PE plot'
 	print('\n\t- ME and PE')
 
 	with open(os.path.join(erg_path,'modulat.dat'),'r') as infile:
@@ -808,9 +820,10 @@ def linefit_results(spectrum,colo):
 	curdoc().select_one({"name":"PE_fig"}).line(x='x',y='y',color=colo,line_width=2,source=PE_source,name='{} PE line'.format(test))
 	curdoc().select_one({"name":"series_fig"}).scatter(x='x',y='y',color=colo,size=5,source=series_source,name='{} series scatter'.format(test))
 
+	time.sleep(3)
 	###############################
 	############################### Column
-	curdoc().select_one({"name":"status_div"}).text+='<br>- Adding column plot'
+	status_div.text += '<br>- Adding column plot'
 	print('\n\t- column')
 
 	with open(os.path.join(erg_path,'colparms.dat'),'r') as infile:
@@ -831,87 +844,10 @@ def linefit_results(spectrum,colo):
 
 	curdoc().select_one({"name":"column_fig"}).scatter(x='x',y='y',color=colo,source=COL_source,name='{} column scatter'.format(test))
 	curdoc().select_one({"name":"column_fig"}).line(x='x',y='y',color=colo,line_width=2,source=COL_source,name='{} column line'.format(test))
-	
-	###############################
-	############################### ILS
-	curdoc().select_one({"name":"status_div"}).text+='<br>- Adding ILS'
-	print('\n\t- Adding ILS')
-
-	with open(os.path.join(erg_path,'ilsre.dat'),'r') as infile:
-		content = infile.readlines()
-
-	content = np.array([[float(elem) for elem in line.split()] for line in content]).T
- 
-	all_data[test]['ILS'] = {'x':content[0],'y':content[1]}
-
-	curdoc().select_one({"name":"ILS_line"}).data_source.data.update(all_data[test]['ILS'])
-
-	###############################
-	if not ignore_spec:
-		############################### Spectrum
-		curdoc().select_one({"name":"status_div"}).text+='<br>- Adding spectrum'
-		print('\n\t- Adding spectrum')
-
-		x,y = np.loadtxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
-	 
-		all_data[test]['spec'] = {'x':x,'y':y}
-
-		curdoc().select_one({"name":"spec_line"}).data_source.data.update(all_data[test]['spec'])
-		spec_fig = curdoc().select_one({'name':'spec_fig'})
-		spec_fig.x_range.start = np.min(all_data[test]['spec']['x'])
-		spec_fig.x_range.end = np.max(all_data[test]['spec']['x'])
-		
-		###############################
-	############################### Microwindows
-	curdoc().select_one({"name":"status_div"}).text+='<br>- Adding spectral fits with residuals'
-	print('\n\t- Adding spectral fits with residuals')
-
-	mwfiles = [i for i in os.listdir(erg_path) if 'specre' in i]
-	
-	for it,mwfile in enumerate(mwfiles):
-		with open(os.path.join(erg_path,mwfile),'r') as infile:
-			content = infile.readlines()
-
-		try:
-			content = np.array([[float(elem) for elem in line.split()] for line in content]).T
-		except:
-			new_content = []
-			for l,line in enumerate(content):
-				line = line.split()
-				new_content.append(line)
-				for e,elem in enumerate(line):
-					try:
-						new_content[l][e] = float(elem)
-					except:
-						new_content[l][e] = float(elem.replace('-','E-'))
-			content = np.array(new_content).T
-		
-		resid = 100*(content[1]-content[2])/content[2] # (measured-calculated)/calculated
-
-		all_data[test]['mw{}'.format(it+1)] = {'x':content[0],'meas':content[1],'calc':content[2],'resid':resid}
-		all_data[test]['rms_resid_mw{}'.format(it+1)] = "{:.5f}".format(np.sqrt(np.mean(resid**2)))
-
-	all_data[test]['avg_rms_resid'] = np.mean(np.array([all_data[test]['rms_resid_mw{}'.format(it+1)] for it,mwfile in enumerate(mwfiles)]).astype(float))
-
-	mw_fig = curdoc().select_one({"name":"mw_fig"})
-	mw_fig.title.text = "Microwindow 1"
-
-	resid_fig = curdoc().select_one({"name":"resid_fig"})
-	resid_fig.title.text = 'RMS = '+all_data[test]['rms_resid_mw1']
-
-	avg_rms_div = curdoc().select_one({"name":"avg_rms_div"})
-	avg_rms_div.text = "Average rms of residuals = {:.5f}".format(all_data[test]['avg_rms_resid'])
-	
-	curdoc().select_one({"name":"meas_line"}).data_source.data.update(all_data[test]['mw1'])
-	curdoc().select_one({"name":"calc_line"}).data_source.data.update(all_data[test]['mw1'])
-	curdoc().select_one({"name":"resid_line"}).data_source.data.update(all_data[test]['mw1'])
-
-	# setup mw_buttons
-	curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mwfiles))]
 
 	###############################
 	############################### Averaging Kernels
-	curdoc().select_one({"name":"status_div"}).text+='<br>- Adding averaging kernels'
+	status_div.text += '<br>- Adding averaging kernels'
 	print('\n\t- Adding averaging kernels')
 
 	AKapo_fig = curdoc().select_one({"name":"AKapo_fig"})
@@ -955,18 +891,94 @@ def linefit_results(spectrum,colo):
 							'color':viridis(points),
 							}
 
-	for elem in ["AKapo_line","AKphase_line","AKapo_scatter","AKphase_scatter"]:
-		curdoc().select_one({"name":elem}).data_source.data.update(all_data[test]['AK'])
-
 	AKapo_fig.title.text = 'AK apo; DOFS = {:5.3f}'.format(np.sum(np.diag(all_data[test]['AK']['AKapo'])))
 	AKphase_fig.title.text = 'AK phase; DOFS = {:5.3f}'.format(np.sum(np.diag(all_data[test]['AK']['AKphase'])))
 
-	###############################
-	###############################
+	for elem in ["AKapo_line","AKphase_line","AKapo_scatter","AKphase_scatter"]:
+		curdoc().select_one({"name":elem}).data_source.data.update(all_data[test]['AK'])
 
-	add_button(test)
+	###############################
+	############################### ILS
+	status_div.text += '<br>- Adding ILS'
+	print('\n\t- Adding ILS')
+
+	with open(os.path.join(erg_path,'ilsre.dat'),'r') as infile:
+		content = infile.readlines()
+
+	content = np.array([[float(elem) for elem in line.split()] for line in content]).T
+ 
+	all_data[test]['ILS'] = {'x':content[0],'y':content[1]}
+
+	curdoc().select_one({"name":"ILS_line"}).data_source.data.update(all_data[test]['ILS'])
+
+	###############################
+	if not ignore_spec:
+		############################### Spectrum
+		status_div.text += '<br>- Adding spectrum'
+		print('\n\t- Adding spectrum')
+
+		x,y = np.loadtxt(os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt'),unpack=True)
+	 
+		all_data[test]['spec'] = {'x':x,'y':y}
+
+		curdoc().select_one({"name":"spec_line"}).data_source.data.update(all_data[test]['spec'])
+		spec_fig = curdoc().select_one({'name':'spec_fig'})
+		spec_fig.x_range.start = np.min(all_data[test]['spec']['x'])
+		spec_fig.x_range.end = np.max(all_data[test]['spec']['x'])
+		
+		###############################
+	############################### Microwindows
+	status_div.text += '<br>- Adding spectral fits with residuals'
+	print('\n\t- Adding spectral fits with residuals')
+
+	mwfiles = [i for i in os.listdir(erg_path) if 'specre' in i]
+	
+	for it,mwfile in enumerate(mwfiles):
+		with open(os.path.join(erg_path,mwfile),'r') as infile:
+			content = infile.readlines()
+
+		try:
+			content = np.array([[float(elem) for elem in line.split()] for line in content]).T
+		except:
+			new_content = []
+			for l,line in enumerate(content):
+				line = line.split()
+				new_content.append(line)
+				for e,elem in enumerate(line):
+					try:
+						new_content[l][e] = float(elem)
+					except:
+						new_content[l][e] = float(elem.replace('-','E-'))
+			content = np.array(new_content).T
+		
+		resid = 100*(content[1]-content[2])/content[2] # (measured-calculated)/calculated
+
+		all_data[test]['mw{}'.format(it+1)] = {'x':content[0],'meas':content[1],'calc':content[2],'resid':resid}
+		all_data[test]['rms_resid_mw{}'.format(it+1)] = "{:.5f}".format(np.sqrt(np.mean(resid**2)))
+
+	all_data[test]['avg_rms_resid'] = np.mean(np.array([all_data[test]['rms_resid_mw{}'.format(it+1)] for it,mwfile in enumerate(mwfiles)]).astype(float))
+
+	mw_fig = curdoc().select_one({"name":"mw_fig"})
+	mw_fig.title.text = "Microwindow 1"
+
+	resid_fig = curdoc().select_one({"name":"resid_fig"})
+	resid_fig.title.text = 'RMS = '+all_data[test]['rms_resid_mw1']
+
+	avg_rms_div = curdoc().select_one({"name":"avg_rms_div"})
+	avg_rms_div.text = "Average rms of residuals = {:.5f}".format(all_data[test]['avg_rms_resid'])
+	
+	curdoc().select_one({"name":"meas_line"}).data_source.data.update(all_data[test]['mw1'])
+	curdoc().select_one({"name":"calc_line"}).data_source.data.update(all_data[test]['mw1'])
+	curdoc().select_one({"name":"resid_line"}).data_source.data.update(all_data[test]['mw1'])
+	time.sleep(5)
+	# setup mw_buttons
+	curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mwfiles))]
+
+	###############################
+	###############################
 
 	print(spectrum,'DONE')
+	status_div.text += "<br><b>DONE</b>"
 
 def add_button(test):
 	'''
@@ -989,6 +1001,8 @@ def add_button(test):
 
 	test_button.on_change('clicks',change_spectrum)
 	remove_button.on_change('clicks',remove_test)
+
+	time.sleep(3)
 
 def remove_test(attr,old,new):
 	'''
@@ -1439,7 +1453,7 @@ def doc_maker():
 	load_button = Button(label='Load Session', width=90, css_classes=["custom_button"],name="load_button")
 	loop_button = Button(label='loop',width=90, css_classes=["custom_button"],name="loop_button")
 	refresh_button = Button(label='Update dropdowns',width=105,css_classes=["custom_button"],name="refresh_button")
-	MW_buttons = RadioButtonGroup(labels=[''],active=0,width=850,name='MW_buttons') # buttons that will switch between the different microwindows; start empty, will be updated later
+	MW_buttons = RadioButtonGroup(labels=['Window selection'],active=0,width=850,name='MW_buttons') # buttons that will switch between the different microwindows; start empty, will be updated later
 	# Button callbacks
 	lft_button.on_click(setup_linefit)
 	save_button.on_click(save_session)
@@ -1604,8 +1618,9 @@ def linefit_loop():
 	reg_key = re.compile(keyword.replace('*','.*'),re.IGNORECASE)
 
 	spec_input = curdoc().select_one({"name":"spec_input"})
-	status_div = curdoc().select_one({"name":"status_div"})
 
+	status_div = curdoc().select_one({"name":"status_div"})
+	
 	# get list of spectra in lft_app/spectra that include the keyword in their name
 	select_spectra = [elem for elem in spec_input.options if reg_key.match(elem)]
 
@@ -1614,7 +1629,8 @@ def linefit_loop():
 		spec_input.value = spectrum
 		setup_linefit()
 		status_div.text = 'Spectrum {}/{} done'.format(i+1,len(select_spectra))
-		time.sleep(3) # I put as small delay to let the lines render before the next iteration
+		print(status_div.text)
+		time.sleep(5) # I put as small delay to let the lines render before the next iteration
 
 	save_session() # save the current session when the loop is finished
 
