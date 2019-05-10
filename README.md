@@ -12,6 +12,8 @@ This app works with python 3.x and with bokeh > 1.1.0 installed.
 
 There are issues with the latest versions of Tornado, the apps works fine with Tornado 4.5.2
 
+To use this app with linefit 14.5, you need to revert to the commit 2c7acbb with bokeh 0.12.10 and python 2.7
+
 ### Python ###
 
 I suggest downloading python from https://www.anaconda.com/download/
@@ -41,8 +43,8 @@ This can read both OPUS and .dpt files.
 
 Using .dpt files requires extra steps.
 
-- Put the lft_app folder in the linefit/lft145/ directory
-- lft145.exe (or lft145_ifort on linux) and the directories 'hit' and 'ergs' must be present in the linefit/lft145/ directory
+- Put the lft_app folder in the linefit/lft147/ directory
+- lft147.exe (or lft147_ifort on linux) and the directories 'hit' and 'ergs' must be present in the linefit/lft147/ directory
 - Spectrum file names need to follow this naming convention: YYMMDD_site_cell_MOPD_X_num.ext
 	- YYMMDD year month day
 	- site: two letter site abbreviation (e.g. eu for Eureka, oc for Lamont)
@@ -72,7 +74,7 @@ Using .dpt files requires extra steps.
 	
 - In lft_app/lft_setup.py, add your cell information (follow the template)
 
-- To run the app, navigate to the linefit/lft145/ directory in your terminal and use the command
+- To run the app, navigate to the linefit/lft147/ directory in your terminal and use the command
 
 	bokeh serve --show lft_app
 
@@ -197,7 +199,7 @@ You can click or select the scatter points to highlight the correspond averaging
 
 N2O and HBr cell spectra are processed in a loop until the cell pressure converges; this usually take 2-3 linefit runs.
 
-For HCl cell spectra this is done directly in linefit with the TCCON mode, so it takes longer to process these spectra with linefit 14.7 compared to 14.5
+For HCl cell spectra this is done directly in linefit with the TCCON mode, so it takes longer to process these spectra compared to the extended mode
 
 The python dictionaries saved in lft_app/saved_sessions/ can be merged with a utility program lft_app/utils/merge_sessions.py
 
