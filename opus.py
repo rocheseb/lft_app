@@ -166,9 +166,9 @@ class Opus:
 
             for bid in range(1, ndb):  # we skip the first block since this is the directory block which we have just parsed
 
-                if opusdir[bid][0] in [160, 48, 32, 96, 23, 64]:
+                if opusdir[bid][0] in [23, 31, 160, 48, 32, 96, 64]:
 
-                    if opusdir[bid][0] in [23]:  # we treat data parameter blocks differently
+                    if opusdir[bid][0] in [23,31]:  # we treat data parameter blocks differently
 
                         datapairs = {'subID': opusdir[bid][1]}
 
@@ -236,7 +236,7 @@ class Opus:
                             print("Unknown parameter type, it will be ignored")
                             continue
 
-                        if opusdir[bid][0] in [23]:  # we treat data parameter blocks differently
+                        if opusdir[bid][0] in [23,31]:  # we treat data parameter blocks differently
 
                             datapairs[pname] = pval
 
@@ -244,7 +244,7 @@ class Opus:
 
                             pairs[pname] = pval
 
-                    if opusdir[bid][0] in [23]:
+                    if opusdir[bid][0] in [23,31]:
 
                         parameters.append(datapairs)  # Add each individual data parameters block to the output
 
@@ -270,7 +270,7 @@ class Opus:
 
                 for bid in range(1, ndb):  # skip the first block: this is the directory block which we have just parsed
 
-                    if opusdir[bid][0] in [7]:  # This time we focus only on the data blocks
+                    if opusdir[bid][0] in [7,15]:  # This time we focus only on the data blocks
 
                         # find the corresponding data parameter block based on the subID
 
