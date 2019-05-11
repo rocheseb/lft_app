@@ -720,19 +720,23 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 	elif mode == 'opus':
 		opus_file = Opus(spectrum_path)
 		opus_file.get_data()
-		subIDs = [elem['subID'] for elem in opus_file.param[1:]]
-		try:
-			ID = subIDs.index(136)
-		except ValueError:
-			try:
-				ID = subIDs.index(4)
-			except:
-				status_div.text = '\nCannot find the spectrum in {}'.format(spectrum)
-				print('\nCannot find the spectrum in {}'.format(spectrum))
-				return True
+		data_blocks = opus_file.param[1:]
+		print(len(data_blocks),'data blocks found with subIDs',[block['subID'] for block in data_blocks])
+		subIDs = [elem['subID'] for elem in data_blocks]
+		for i,elem in enumerate(opus_file.param[1:]):
+			if elem['DXU'] == 'WN':
+				subID = elem['subID']
+				break
+		else: # if we can't find a block with DXU='WN', show an error message
+			status_div.text = 'Cannot find the spectrum in {}'.format(spectrum)
+			print('\nCannot find the spectrum in {}'.format(spectrum))
+			return True
+		print('Using data block with subID =',subID)	
 
-		x = [elem for elem in opus_file.xdata if elem[0]!=0][0] # need to check if this always corresponds to the correct data block
+		ID = opus_file.subID.index(subID)
+		x = opus_file.xdata[ID]
 		y = opus_file.ydata[ID]
+
 		# cut the spectrum
 		if cell == 'hcl':
 			minwn,maxwn = (5670,5805)
