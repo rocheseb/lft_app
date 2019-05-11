@@ -269,6 +269,9 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 	low_SNR = False
 	if 'insufficient SNR' in output:
 		low_SNR = True
+	too_weak = False
+	if 'lines too weak' in output:
+		too_weak = True
 
 	output = output.splitlines()
 
@@ -277,26 +280,29 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 	if spectral_detuning:
 		print('Significant spectral detuning:',spectral_detuning)
 	if shift_too_big:
-		status_div.text += '<br>- Shift too big'
+		status_div.text += '<br>- <b>Issue:</b> Shift too big'
 		print('Shift too big:',shift_too_big)
 		print('The app cannot handle the "Shift too big" warning')
 		return True
 	if low_SNR:
-		status_div.text += '<br>- <b>SNR too low</b> (<2000)'
+		status_div.text += '<br>- <b>Issue:</b> SNR too low (<2000)'
 		return True
+	if too_weak:
+		status_div.text += '<br>- <b>Issue:</b> lines too weak'
+		return True		
 
 	if True in [elem in output[-1] for elem in ["shutdown program", 'stop program']]:
 
 		if undersampled and not spectral_detuning and not shift_too_big:
-			status_div.text += '<br>- Spectrum undersampled'
+			status_div.text += '<br>- <b>Issue:</b> Spectrum undersampled'
 			status_div.text += '<br>- Rerun linefit and ignore warning'
-			execute(cmd,cwd=cwd,inputs=[1])
+			exec_issue = execute(cmd,cwd=cwd,inputs=[1])
 		else:
 			
 			if spectral_detuning:
 				spectral_detuning = float(output[-2])
 						
-				status_div.text += '<br>- Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
+				status_div.text += '<br>- <b>Issue:</b> Spectral detuning detected: {:9.2e}'.format(spectral_detuning)
 				status_div.text += '<br>- Rerun linefit with spectral detuning corrected'
 
 				input_file = os.path.join(wdir,'lft14.inp')
@@ -311,11 +317,14 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 					outfile.writelines(content)
 
 			if undersampled and shift_too_big:
-				execute(cmd,cwd=cwd,inputs=[1,0])
+				exec_issue = execute(cmd,cwd=cwd,inputs=[1,0])
 			elif undersampled:
-				execute(cmd,cwd=cwd,inputs=[1])
+				exec_issue = execute(cmd,cwd=cwd,inputs=[1])
 			else:
-				execute(cmd,cwd=cwd)
+				exec_issue = execute(cmd,cwd=cwd)
+
+		if exec_issue:
+			return exec_issue
 
 def busy(func):
 	'''
@@ -569,7 +578,7 @@ def setup_linefit():
 
 	exec_issue = run_linefit(cell) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
 	if exec_issue:
-		status_div.text += "<br><b>PROBLEM !</b>"
+		status_div.text += "<br><b>This issue is not handled by the app</b>"
 		return
 
 	# store results in all_data and update plots
@@ -619,9 +628,8 @@ def run_linefit(cell):
 	print('\n\t- Running linefit ...')
 	print('\t executing command {} in {}'.format(lft_command[0],wdir))
 	exec_issue = execute(lft_command,cwd=wdir)
-
 	if exec_issue:
-		return True
+		return exec_issue
 
 	if cell in ['n2o','hbr']:
 		iteration = 1
