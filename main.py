@@ -507,6 +507,9 @@ def setup_linefit():
 
 	spectrum = curdoc().select_one({"name":"spec_input"}).value
 
+	status_div.text = "<b>Now doing:</b> <br>{}".format(spectrum)
+	print('\nNow doing:',spectrum)
+
 	if reg_opus.match(spectrum):
 		mode = 'opus'
 	elif reg_dpt.match(spectrum):
@@ -536,23 +539,26 @@ def setup_linefit():
 
 	reg = reg_input.value # this won't be used for HCl cell tests
 
+	status_div.text += "<br>- reg= {}".format(reg)
+	print('\nreg=',reg)
+
 	if reg!='TCCON':
 		try:
 			float(reg)
 		except:
 			status_div.text = "Regularisation factor must be a number"
 			return
+	else:
+		reg = 'T'
 
 	# if the spectrum was already analysed with the given inputs, do nothing
 	dum_leg_labels = [elem.label['value'] for elem in dum_fig.renderers[0].items]
 	already_done = [elem for elem in dum_leg_labels if ((spectrum.split('.')[0] in elem) and ('reg={}'.format(reg) in elem))]!=[]
 	if already_done:
 		status_div.text = "{} already analysed with reg={}".format(spectrum,reg)
+		print("\n{} already analysed with reg={}".format(spectrum,reg))
 		return
 	
-	status_div.text = "<b>Now doing:</b> <br>{}<br>reg= {}".format(spectrum,reg)
-	print('\nNow doing',spectrum,'with reg=',reg)
-
 	colo = check_colors(add_one=True)
 	
 	spectrum_path = os.path.join(spec_path,spectrum)
@@ -791,7 +797,10 @@ def linefit_results(spectrum,colo):
 	status_div = curdoc().select_one({"name":"status_div"})
 
 	# string containing info on the current spectrum + current regularisation factor
-	test = '{} reg={}'.format(spectrum.split('.')[0],curdoc().select_one({'name':'reg_input'}).value)
+	reg = curdoc().select_one({'name':'reg_input'}).value
+	if reg == 'TCCON':
+		reg = 'T' # use a shorter string to get smaller test buttons and legends
+	test = '{} reg={}'.format(spectrum.split('.')[0],reg)
 
 	add_button(test)
 
@@ -1006,6 +1015,7 @@ def add_button(test):
 
 	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
 	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
+	print('button_list:',button_list)
 
 	# reset the click counts
 	all_data['cur_clicks'] = [button.clicks for button in button_list]
