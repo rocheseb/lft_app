@@ -1015,6 +1015,7 @@ def add_button(test):
 
 	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
 	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
+	print('button_box.children:',button_box.children)
 	print('button_list:',button_list)
 
 	# reset the click counts
