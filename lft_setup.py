@@ -127,6 +127,20 @@ def hcl_cells():
 	cell['ll']['h37cl_column'] = 1.2947e+22
 	cell['ll']['calibration_run'] = 1312
 
+	# Wollongong
+	cell['wg'] = {key:template[key] for key in template}
+	cell['wg']['location'] = 'Wollongong'
+	cell['wg']['owner'] = 'UoW'
+	cell['wg']['ID'] = 36
+	cell['wg']['length'] = 100
+	cell['wg']['batch'] = 'CT0805'
+	cell['wg']['text_on_cell_body'] = 'cell #4'
+	cell['wg']['effp_h35cl_296k'] = 4.816
+	cell['wg']['effp_h37cl_296k'] = 4.818
+	cell['wg']['h35cl_column'] = 1.2247e22
+	cell['wg']['h37cl_column'] = 1.2164e22
+	cell['wg']['calibration_run'] = 1308
+
 	return cell
 
 def hbr_cells():
