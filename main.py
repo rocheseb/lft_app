@@ -806,8 +806,8 @@ def linefit_results(spectrum,colo):
 
 	# Add a new entry in the all_data dictionary
 	all_data[test] = {'statevec':0,'ILS':0,'AK':0}
-	all_data[test].update({'mw{}'.format(i+1):0 for i in range(13)})
-	all_data[test].update({'rms_resid_mw{}'.format(i+1):0 for i in range(13)})
+	all_data[test].update({'mw{}'.format(i+1):0 for i in range(18)})
+	all_data[test].update({'rms_resid_mw{}'.format(i+1):0 for i in range(18)})
 
 	# Update the title in the ils_fits_panel and ak_panel
 	curdoc().select_one({"name":"cur_spec_div"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
@@ -977,15 +977,24 @@ def linefit_results(spectrum,colo):
 		mw_data[it] = content
 	
 	if reg == 'T': # the spectrum is too big and slows down the app in TCCON mode, so divide it in smaller windows for display
-		tccon_mode_windows = [	(5683.18,5688.05),
-								(5701.58,5706.5),
-								(5718.8,5723.7),
-								(5734.7,5739.66),
-								(5749.4,5754.36),
-								(5762.8,5767.8),
-								(5774.95,5779.95),
-								(5785.8,5790.8),
-								(5795.36,5800.2),	]
+		tccon_mode_windows = [	(5683.18,5683.98),
+								(5687.25,5688.05),
+								(5701.58,5702.38),
+								(5705.7,5706.5),
+								(5718.8,5719.6),
+								(5722.9,5723.7),
+								(5734.7,5735.5),
+								(5738.86,5739.66),
+								(5749.4,5750.2),
+								(5753.56,5754.36),
+								(5762.8,5763.6),
+								(5767.0,5767.8),
+								(5774.95,5775.75),
+								(5779.15,5779.95),
+								(5785.8,5786.6),
+								(5790.0,5790.8),
+								(5795.36,5796.16),
+								(5799.8,5800.2),	]
 		for it,bounds in enumerate(tccon_mode_windows):
 			inds = np.where((bounds[0]<content[0]) & (content[0]<bounds[1]))[0]
 			mw_data[it] = np.array([content[0][inds],content[1][inds],content[2][inds]])
@@ -1035,7 +1044,7 @@ def add_button(test):
 		max_ID = 0
 
 	test_button = Button(label=test,width=180,name='test_button_{}'.format(max_ID+1))
-	remove_button = Button(label='X',width=30,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
+	remove_button = Button(label='X',width=15,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
 
 	button_box = curdoc().select_one({"name":"button_box"})
 	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
@@ -1229,7 +1238,7 @@ def change_spectrum(attr,old,new):
 	MW_buttons = curdoc().select_one({'name':'MW_buttons'})
 	N_windows = len(window_dict[cell])
 	if 'reg=T' in test:
-		N_windows = 9
+		N_windows = 18
 	MW_buttons.labels = ['MW {}'.format(i+1) for i in range(N_windows)]
 
 def change_microwindow(attr,old,new):
@@ -1503,7 +1512,7 @@ def doc_maker():
 	load_button = Button(label='Load Session', width=90, css_classes=["custom_button"],name="load_button")
 	loop_button = Button(label='loop',width=90, css_classes=["custom_button"],name="loop_button")
 	refresh_button = Button(label='Update dropdowns',width=105,css_classes=["custom_button"],name="refresh_button")
-	MW_buttons = RadioButtonGroup(labels=['Window selection'],active=0,width=850,name='MW_buttons') # buttons that will switch between the different microwindows; start empty, will be updated later
+	MW_buttons = RadioButtonGroup(labels=['Window selection'],active=0,width=850,max_width=850,width_policy='fixed',name='MW_buttons',css_classes=["mw_buttons"]) # buttons that will switch between the different microwindows; start empty, will be updated later
 	# Button callbacks
 	lft_button.on_click(setup_linefit)
 	save_button.on_click(save_session)
@@ -1515,8 +1524,8 @@ def doc_maker():
 	# Text
 	status_text = Div(text='<font size=2 color="teal"><b>Status:</b></font>',name="status_text")
 	status_div = Div(text='Select a spectrum',width=300,name="status_div") # will display information on app status
-	cur_spec_div = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=400,name="cur_spec_div") # will display the current spectrum
-	cur_spec_div2 = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=400,name="cur_spec_div2") # duplicate widget for the averaging kernels panel
+	cur_spec_div = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=850,name="cur_spec_div",css_classes=["custom_div"]) # will display the current spectrum
+	cur_spec_div2 = Div(text="<font size=3 color='teal'><b>Spectrum</b></font>",width=850,name="cur_spec_div2",css_classes=["custom_div"]) # duplicate widget for the averaging kernels panel
 	suptitle = Div(text='<font size=5 color="teal"><b>Linefit 14.7</b></font>',width=150,name='suptitle') # big title displayed at the top of the webpage
 	# Loader gif
 	loader = Div(text="",width=40,height=40,name="loader")
@@ -1559,8 +1568,8 @@ def doc_maker():
 	# Div to show the average rms of residuals from all windows
 	avg_rms_div = Div(text="Average rms of residuals =",name="avg_rms_div")
 	# Averaging kernels
-	AKapo_fig = figure(title='AK apo',plot_width=450,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=DataRange1d(start=-0.8,end=1.1),tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKapo_fig")
-	AKphase_fig = figure(title='AK phase',plot_width=450,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=AKapo_fig.x_range,y_range=AKapo_fig.y_range,tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKphase_fig")
+	AKapo_fig = figure(title='AK apo',plot_width=400,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=DataRange1d(start=-0.8,end=1.1),tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKapo_fig")
+	AKphase_fig = figure(title='AK phase',plot_width=400,plot_height=400,min_border_left=80,min_border_bottom=50,min_border_right=30,x_range=AKapo_fig.x_range,y_range=AKapo_fig.y_range,tools="box_select,tap,pan,box_zoom,wheel_zoom,redo,undo,reset,save",active_drag="box_select",name="AKphase_fig")
 	for elem in [AKapo_fig,AKphase_fig]:
 		elem.xaxis.axis_label = 'AK'
 		elem.yaxis.axis_label = 'OPD (cm)'
@@ -1632,13 +1641,13 @@ def doc_maker():
 	ak_panel = Panel(child=ak_grid,title='Averaging kernels')
 
 	# put the ils_fits_panel and MEPECOL_panel in a Tabs() object
-	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel],width=920,name='final')
+	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel],width=890,name='final',css_classes=["custom_tabs"])
 
 	# put all the widgets in a widget box
 	widget_box = widgetbox(space_div,refresh_button,session_input,load_button,line_div,dum_div,spec_input,dum_div2,reg_input,line_div2,lft_button,line_div4,save_input,save_button,line_div3,loop_input,loop_button,dum_div3,loader,status_text,status_div,css_classes=['side_widgets'],name="widget_box")
 
 	# empty widget box. After linefit is run, it will be filled with buttons that select the spectrum to be displayed in the ils_fits_panel
-	button_box = Column(children=[widgetbox(width=255)],name='button_box')
+	button_box = Column(children=[widgetbox(width=235)],name='button_box')
 
 	# put the widget_box in a grid
 	side_box = gridplot([[widget_box]],toolbar_location=None)

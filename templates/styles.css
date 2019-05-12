@@ -27,3 +27,39 @@ label {
 .save_input div.bk.bk-input-group input {
 	width:160px;
 }
+
+.mw_buttons div.bk.bk-btn.bk-btn-default {
+	width:47px;
+	background-color: lightcyan;
+	font-weight: bold;
+	border-color: darkgray;
+	font-size: x-small;
+	padding-left: 8px;
+}
+
+.mw_buttons div.bk.bk-btn.bk-btn-default.bk-active {
+	background-color: lightblue;
+	border-color: teal;
+}
+
+.custom_tabs div.bk.bk-tab {
+	background-color: lightcyan;
+	font-weight: bold;
+	border-color: darkgray;
+	color: teal;
+}
+
+.custom_tabs div.bk.bk-tab.bk-active {
+	background-color: lightblue;
+	border-color: teal;
+	color: teal;
+	font-weight: bold;
+}
+
+.custom_tabs div.bk.bk-headers-wrapper {
+	border-bottom: 0px !important;
+}
+
+.custom_div {
+	text-align: center;
+}
