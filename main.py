@@ -1026,19 +1026,25 @@ def add_button(test):
 	'''
 	global all_data
 
-	test_button = Button(label=test,width=180)
-	remove_button = Button(label='X',width=30,tags=[test],css_classes=["remove_button"])
+	all_buttons = curdoc().select({'type':Button})
+	all_test_buttons = [elem[1] for elem in sorted([(button.name,button) for button in all_buttons if 'test_button' in button.name])]
+
+	try:
+		max_ID = int(all_test_buttons[-1].name.split('_')[-1])
+	except:
+		max_ID = 0
+
+	test_button = Button(label=test,width=180,name='test_button_{}'.format(max_ID+1))
+	remove_button = Button(label='X',width=30,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
 
 	button_box = curdoc().select_one({"name":"button_box"})
-
 	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
-	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
-	print('button_box.children:',button_box.children)
-	print('button_list:',button_list)
+
+	all_test_buttons += [test_button]
 
 	# reset the click counts
-	all_data['cur_clicks'] = [button.clicks for button in button_list]
-	all_data['prev_clicks'] = [button.clicks for button in button_list]
+	all_data['cur_clicks'] = [button.clicks for button in all_test_buttons]
+	all_data['prev_clicks'] = [button.clicks for button in all_test_buttons]
 
 	test_button.on_change('clicks',change_spectrum)
 	remove_button.on_change('clicks',remove_test)
@@ -1052,10 +1058,10 @@ def remove_test(attr,old,new):
 
 	global all_data
 
-	button_box = curdoc().select_one({"name":"button_box"})
-	button_list = [row.children[0].children[0] for row in button_box.children[1:]]
+	all_buttons = curdoc().select({'type':Button})
+	all_remove_buttons = sorted([button for button in all_buttons if 'remove_button' in button.name])
 
-	for button in button_list:
+	for button in all_remove_buttons:
 		if button.clicks==1:
 			break
 
@@ -1158,16 +1164,16 @@ def change_spectrum(attr,old,new):
 	'''
 	global all_data, ignore_spec
 
-	button_box = curdoc().select_one({"name":"button_box"})
-	button_list = [row.children[1].children[0] for row in button_box.children[1:]]
+	all_buttons = curdoc().select({'type':Button})
+	all_test_buttons = [elem[1] for elem in sorted([(button.name,button) for button in all_buttons if 'test_button' in button.name])]
 
 	# list of current number of clicks for each spectrum button (including the one that just got clicked)
-	all_data['cur_clicks'] = [button.clicks for button in button_list]
+	all_data['cur_clicks'] = [button.clicks for button in all_test_buttons]
 
 	# compare cur_clicks to prev_clicks to know which button has just been clicked
 	for i in range(len(all_data['cur_clicks'])):
 		if all_data['cur_clicks'][i]!=all_data['prev_clicks'][i]:
-			test = button_list[i].label
+			test = all_test_buttons[i].label
 	# set prev_clicks equal to cur_clicks 
 	all_data['prev_clicks'] = [i for i in all_data['cur_clicks']]
 
