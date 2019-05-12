@@ -805,7 +805,9 @@ def linefit_results(spectrum,colo):
 	add_button(test)
 
 	# Add a new entry in the all_data dictionary
-	all_data[test] = {'statevec':0,'ILS':0,'AK':0,'mw1':0,'mw2':0,'mw3':0,'mw4':0,'mw5':0,'mw6':0,'mw7':0,'mw8':0,'mw9':0,'mw10':0,'mw11':0,'mw12':0,'mw13':0,}
+	all_data[test] = {'statevec':0,'ILS':0,'AK':0}
+	all_data[test].update({'mw{}'.format(i+1):0 for i in range(13)})
+	all_data[test].update({'rms_resid_mw{}'.format(i+1):0 for i in range(13)})
 
 	# Update the title in the ils_fits_panel and ak_panel
 	curdoc().select_one({"name":"cur_spec_div"}).text = "<font size=3 color='teal'><b>{}</b></font>".format(test)
@@ -953,6 +955,7 @@ def linefit_results(spectrum,colo):
 	print('\n\t- Adding spectral fits with residuals')
 
 	mwfiles = [i for i in os.listdir(erg_path) if 'specre' in i]
+	mw_data = {}
 	
 	for it,mwfile in enumerate(mwfiles):
 		with open(os.path.join(erg_path,mwfile),'r') as infile:
@@ -971,14 +974,30 @@ def linefit_results(spectrum,colo):
 					except:
 						new_content[l][e] = float(elem.replace('-','E-'))
 			content = np.array(new_content).T
-		
+		mw_data[it] = content
+	
+	if reg == 'T': # the spectrum is too big and slows down the app in TCCON mode, so divide it in smaller windows for display
+		tccon_mode_windows = [	(5683.18,5688.05),
+								(5701.58,5706.5),
+								(5718.8,5723.7),
+								(5734.7,5739.66),
+								(5749.4,5754.36),
+								(5762.8,5767.8),
+								(5774.95,5779.95),
+								(5785.8,5790.8),
+								(5795.36,5800.2),	]
+		for it,bounds in enumerate(tccon_mode_windows):
+			inds = np.where((bounds[0]<content[0]) & (content[0]<bounds[1]))[0]
+			mw_data[it] = np.array([content[0][inds],content[1][inds],content[2][inds]])
+	
+	for it in sorted(mw_data.keys()):		
+		content = mw_data[it]
 		resid = 100*(content[1]-content[2])/content[2] # (measured-calculated)/calculated
 
 		all_data[test]['mw{}'.format(it+1)] = {'x':content[0],'meas':content[1],'calc':content[2],'resid':resid}
 		all_data[test]['rms_resid_mw{}'.format(it+1)] = "{:.5f}".format(np.sqrt(np.mean(resid**2)))
-
-	all_data[test]['avg_rms_resid'] = np.mean(np.array([all_data[test]['rms_resid_mw{}'.format(it+1)] for it,mwfile in enumerate(mwfiles)]).astype(float))
-
+		all_data[test]['avg_rms_resid'] = np.mean(np.array([all_data[test]['rms_resid_mw{}'.format(it+1)] for it in range(len(mw_data.keys()))]).astype(float))
+	
 	mw_fig = curdoc().select_one({"name":"mw_fig"})
 	mw_fig.title.text = "Microwindow 1"
 
@@ -993,8 +1012,7 @@ def linefit_results(spectrum,colo):
 	curdoc().select_one({"name":"resid_line"}).data_source.data.update(all_data[test]['mw1'])
 	time.sleep(5)
 	# setup mw_buttons
-	curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mwfiles))]
-
+	curdoc().select_one({'name':'MW_buttons'}).labels = ['MW {}'.format(i+1) for i in range(len(mw_data.keys()))]
 	###############################
 	###############################
 
@@ -1203,7 +1221,10 @@ def change_spectrum(attr,old,new):
 
 	# update the microwindow buttons
 	MW_buttons = curdoc().select_one({'name':'MW_buttons'})
-	MW_buttons.labels = ['MW {}'.format(i+1) for i in range(len(window_dict[cell]))]
+	N_windows = len(window_dict[cell])
+	if 'reg=T' in test:
+		N_windows = 9
+	MW_buttons.labels = ['MW {}'.format(i+1) for i in range(N_windows)]
 
 def change_microwindow(attr,old,new):
 	'''
