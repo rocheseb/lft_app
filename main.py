@@ -1225,9 +1225,9 @@ def change_spectrum(attr,old,new):
 	AKphase_fig.title.text = 'AK phase; DOFS = {:5.3f}'.format(np.sum(np.diag(new_ak_data['AKphase'])))
 
 	if not ignore_spec:
-		curdoc().select_one({"name":"spec_line"}).data_source.data.update(new_spec_data)
 		# update spectrum range
 		new_spec_data = all_data[test]['spec']
+		curdoc().select_one({"name":"spec_line"}).data_source.data.update(new_spec_data)
 		spec_fig = curdoc().select_one({'name':'spec_fig'})
 		spec_fig.x_range.start = np.min(all_data[test]['spec']['x'])
 		spec_fig.x_range.end = np.max(all_data[test]['spec']['x'])
@@ -1246,7 +1246,7 @@ def change_microwindow(attr,old,new):
 	callback for the microwindow buttons
 	update the plots in 'mw_grid' so that they correspond to the desired microwindow
 	'''
-	global all_data
+	global all_data, ignore_spec
 
 	new_MW = str(new+1)
 
@@ -1277,6 +1277,12 @@ def change_microwindow(attr,old,new):
 	mw_fig.x_range.start = new_mw_data['x'][0]
 	mw_fig.x_range.end = new_mw_data['x'][-1]
 
+	if not ignore_spec:
+		# highlight the selected microwindow region in the spectrum plot
+		spec_data = curdoc().select_one({"name":"spec_line"}).data_source.data
+		cur_mw_x = np.array(spec_data['x'])[(new_mw_data['x'][0]<np.array(spec_data['x'])) & (np.array(spec_data['x'])<new_mw_data['x'][-1])]
+		cur_mw_y = np.array(spec_data['y'])[(new_mw_data['x'][0]<np.array(spec_data['x'])) & (np.array(spec_data['x'])<new_mw_data['x'][-1])]
+		curdoc().select_one({"name":"mw_spec_line"}).data_source.data.update({'x':cur_mw_x,'y':cur_mw_y})
 
 def pdf_report(save_name):
 	'''
@@ -1580,7 +1586,9 @@ def doc_maker():
 		spec_fig.yaxis.axis_label = 'Intensity (??)'
 		spec_fig.xaxis.axis_label = 'Wavenumber (cm-1)'
 		spec_source = ColumnDataSource(data={'x':[],'y':[]})
+		mw_spec_source = ColumnDataSource(data={'x':[],'y':[]})
 		spec_fig.line(x='x',y='y',source=spec_source,name="spec_line")
+		spec_fig.line(x='x',y='y',color='red',source=mw_spec_source,name="mw_spec_line")
 	
 	## SOURCES
 	ILS_source = ColumnDataSource(data={'x':[],'y':[]},name="ILS_source")
@@ -1627,7 +1635,7 @@ def doc_maker():
 	if ignore_spec:
 		ils_fits_grid = gridplot([[ILS_fig,mw_grid]],toolbar_location='left')
 	else:
-		ils_fits_grid = gridplot([[ILS_fig,mw_grid],[spec_fig]],toolbar_location='left')
+		ils_fits_grid = gridplot([[Row(children=[ILS_fig,mw_grid])],[spec_fig]],toolbar_location='left')
 	# Grid with the 'cur_spec_div', the buttons for microwindows and the 'ils_fits_grid'
 	ils_fits_grid = gridplot([[cur_spec_div],[MW_buttons],[ils_fits_grid]],toolbar_location=None)
 	# Panel for the ils_fits_grid
