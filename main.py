@@ -33,7 +33,7 @@ from datetime import datetime, timedelta
 import bokeh
 from bokeh.io import curdoc
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, CustomJS, Button, Div, TextInput, Select, Panel, Tabs, Legend, DataRange1d, RadioButtonGroup, Legend
+from bokeh.models import ColumnDataSource, CustomJS, Button, Div, TextInput, Select, Panel, Tabs, Legend, DataRange1d, RadioButtonGroup, Legend, LegendItem
 from bokeh.layouts import gridplot, widgetbox, Column, Row
 from bokeh.palettes import viridis
 
@@ -837,7 +837,7 @@ def linefit_results(spectrum,colo):
 	PE_source = ColumnDataSource(data=all_data[test]['PE'])
 	series_source = ColumnDataSource(data=all_data[test]['series'])
 
-	ME_line = curdoc().select_one({"name":"ME_fig"}).line(x='x',y='y',color=colo,line_width=2,source=ME_source,name='{} ME line'.format(test),legend=test)
+	ME_line = curdoc().select_one({"name":"ME_fig"}).line(x='x',y='y',color=colo,line_width=2,source=ME_source,name='{} ME line'.format(test))
 	ME_line.on_change('visible',partial(show_hide,test=test))
 	update_legend(test)
 	curdoc().select_one({"name":"PE_fig"}).line(x='x',y='y',color=colo,line_width=2,source=PE_source,name='{} PE line'.format(test))
@@ -1108,7 +1108,7 @@ def update_doc():
 		COL_source = ColumnDataSource(data=all_data[test]['COL'])
 		series_source = ColumnDataSource(data=all_data[test]['series'])
 		# Update lines
-		ME_line = curdoc().select_one({"name":"ME_fig"}).line(x='x',y='y',color=colo,line_width=2,source=ME_source,name='{} ME line'.format(test),legend=test,tags=[])
+		ME_line = curdoc().select_one({"name":"ME_fig"}).line(x='x',y='y',color=colo,line_width=2,source=ME_source,name='{} ME line'.format(test),tags=[])
 		ME_line.on_change('visible',partial(show_hide,test=test))
 		update_legend(test)
 		curdoc().select_one({"name":"PE_fig"}).line(x='x',y='y',color=colo,line_width=2,source=PE_source,name='{} PE line'.format(test))
@@ -1142,11 +1142,8 @@ def update_legend(test):
 
 	glyph = curdoc().select_one({'name':'{} ME line'.format(test)})
 
-	legend = ME_fig.legend[0]
-	dum_fig.renderers[0].items = legend.items
 	dum_fig.renderers += [glyph]
-	
-	legend.visible = False
+	dum_fig.legend[0].items += [LegendItem(label=test,renderers=[glyph])]
 
 def update_colors():
 	'''
@@ -1619,7 +1616,7 @@ def doc_maker():
 	dum_fig.ygrid[0].visible = False
 	dum_fig.xaxis[0].visible = False
 	dum_fig.yaxis[0].visible = False
-	dum_fig.renderers = [Legend(click_policy='hide',location='top_left',border_line_alpha=0,name='dum_fig_leg')]
+	dum_fig.add_layout( Legend(click_policy='hide',location='top_left',border_line_alpha=0,name='dum_fig_leg') )
 
 	## Laying out plot objects
 	# Grid for modulation efficiency, phase error, column scale factor, and ME at MOPD time series
