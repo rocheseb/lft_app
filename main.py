@@ -1036,19 +1036,16 @@ def add_button(test):
 	global all_data
 
 	all_buttons = curdoc().select({'type':Button})
-	all_test_buttons = [elem[1] for elem in sorted([(button.name,button) for button in all_buttons if 'test_button' in button.name])]
-
-	try:
-		max_ID = int(all_test_buttons[-1].name.split('_')[-1])
-	except:
-		max_ID = 0
+	all_test_buttons = [(int(button.name.split('_')[-1]),button) for button in all_buttons if 'test_button' in button.name]
+	all_test_buttons = [elem[1] for elem in sorted(all_test_buttons)]
+	max_ID = len(all_test_buttons)
 
 	test_button = Button(label=test,width=180,name='test_button_{}'.format(max_ID+1))
 	remove_button = Button(label='X',width=15,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
-
+	
 	button_box = curdoc().select_one({"name":"button_box"})
 	button_box.children += [Row(children=[Column(children=[remove_button]),Column(children=[test_button])])]
-
+	
 	all_test_buttons += [test_button]
 
 	# reset the click counts
@@ -1057,7 +1054,7 @@ def add_button(test):
 
 	test_button.on_change('clicks',change_spectrum)
 	remove_button.on_change('clicks',remove_test)
-
+	
 	time.sleep(3)
 
 def remove_test(attr,old,new):
