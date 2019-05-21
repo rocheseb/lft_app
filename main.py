@@ -500,7 +500,7 @@ def setup_linefit():
 
 	dum_fig = curdoc().select_one({"name":"dum_fig"})
 	
-	if len(dum_fig.renderers[0].items)>0:
+	if len(dum_fig.legend[0].items)>0:
 		all_data['ID'] += 1
 	
 	curdoc().select_one({"name":"spec_input"}).js_on_change('value', CustomJS(args={'status_div':status_div},code=spec_input_code))
@@ -550,9 +550,9 @@ def setup_linefit():
 			return
 	else:
 		reg = 'T'
-
+	
 	# if the spectrum was already analysed with the given inputs, do nothing
-	dum_leg_labels = [elem.label['value'] for elem in dum_fig.renderers[0].items]
+	dum_leg_labels = [elem.label['value'] for elem in dum_fig.legend[0].items]
 	already_done = [elem for elem in dum_leg_labels if ((spectrum.split('.')[0] in elem) and ('reg={}'.format(reg) in elem))]!=[]
 	if already_done:
 		status_div.text = "{} already analysed with reg={}".format(spectrum,reg)
@@ -572,7 +572,7 @@ def setup_linefit():
 		if cell == 'hbr':
 			ref_path = os.path.join(bkg_path,'ref_'+spectrum)
 			check_spectrum(ref_path,'ref_'+spectrum)
-
+	
 	# comment out to not ratio the spectrum, the temp file still needs to be in lft_app/spectra/cut and the spectrum will need to be directly in lft_app/spectra
 	spec_not_found = ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode) # this does nothing but copy the spectrum to lft_app/spectra for HCl cells, because the ratioing will be done by Linefit in TCCON mode
 	if spec_not_found:
@@ -581,7 +581,7 @@ def setup_linefit():
 	# update the input file; make sure that it modifies everything that you need !
 	# the regularisation factors are updated from the browser
 	modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list)
-
+	
 	exec_issue = run_linefit(cell) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
 	if exec_issue:
 		status_div.text += "<br><b>This issue is not handled by the app</b>"
@@ -596,13 +596,13 @@ def check_colors(add_one=False):
 	'''
 
 	global all_data
-
+	
 	add = 0 # when used in update_doc()
 	if add_one:
 		add = 1	# when used in setup_linefit()
 
 	test_list = sorted([i for i in all_data.keys() if 'reg' in i])
-
+	
 	N_tests = len(test_list)
 
 	if N_tests >= len(kelly_colors):
