@@ -615,7 +615,7 @@ def check_colors(add_one=False):
 		return new_palette[-1]
 	else:
 		if add_one:
-			return kelly_colors[all_data['ID']]
+			return kelly_colors[N_tests]
 		else:
 			for i,test in enumerate(test_list):
 				all_data[test]['color'] = kelly_colors[i]			
