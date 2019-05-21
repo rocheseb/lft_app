@@ -36,6 +36,10 @@ from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource, CustomJS, Button, Div, TextInput, Select, Panel, Tabs, Legend, DataRange1d, RadioButtonGroup, Legend, LegendItem
 from bokeh.layouts import gridplot, widgetbox, Column, Row
 from bokeh.palettes import viridis
+from bokeh.core.validation import silence
+from bokeh.core.validation.warnings import EMPTY_LAYOUT, MISSING_RENDERERS
+silence(EMPTY_LAYOUT, True)
+silence(MISSING_RENDERERS, True)
 
 # special arrays with special functions for easier vectorized operations
 import numpy as np
