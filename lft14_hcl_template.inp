@@ -39,7 +39,7 @@ ILS model:
     4: TCCON HCl cell analysis (extended IlS + prescribed parameter settings)
 
 $
-4
+{{ILS_model}}
 
 
 
@@ -234,7 +234,7 @@ Reg Modulation (dev+smooth), Reg Phase (dev+smooth),reg T(dev)
 Reg column (dev+smooth, per species), reg spectral scale (mean, per species)
 
 $
-1.0e4,0.3,1.0e4,0.3,0.0
+1.0e4,{{regularisation}},1.0e4,{{regularisation}},0.0
 0.0,0.0,0.0001
 0.0,0.0,0.0001
 

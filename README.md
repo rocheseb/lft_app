@@ -131,6 +131,12 @@ Load the selected .npy file
 
 Dropdown to select a spectrum file from the lft_app/spectra/cut/ directory
 
+##### HCl ILS model #####
+
+For HCl cells, this input lets you choose between the Extended mode and the TCCON mode
+
+HBr and N2O cells are always done with the Extended mode
+
 ##### Regularisation factor #####
 
 Textinput to quickly change the regularisation factor (same number for reg_mod and reg_phase)
