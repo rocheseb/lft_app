@@ -1044,7 +1044,7 @@ def add_button(test):
 	all_test_buttons = [elem[1] for elem in sorted(all_test_buttons)]
 	max_ID = len(all_test_buttons)
 
-	test_button = Button(label=test,width=180,name='test_button_{}'.format(max_ID+1))
+	test_button = Button(label=test,width=200,name='test_button_{}'.format(max_ID+1))
 	remove_button = Button(label='X',width=15,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
 	
 	button_box = curdoc().select_one({"name":"button_box"})
@@ -1653,7 +1653,7 @@ def doc_maker():
 	widget_box = widgetbox(space_div,refresh_button,session_input,load_button,line_div,dum_div,spec_input,dum_div2,reg_input,line_div2,lft_button,line_div4,save_input,save_button,line_div3,loop_input,loop_button,dum_div3,loader,status_text,status_div,css_classes=['side_widgets'],name="widget_box")
 
 	# empty widget box. After linefit is run, it will be filled with buttons that select the spectrum to be displayed in the ils_fits_panel
-	button_box = Column(children=[widgetbox(width=235)],name='button_box')
+	button_box = Column(children=[widgetbox(width=255)],name='button_box')
 
 	# put the widget_box in a grid
 	side_box = gridplot([[widget_box]],toolbar_location=None)
