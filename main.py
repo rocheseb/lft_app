@@ -1001,7 +1001,7 @@ def linefit_results(spectrum,colo):
 			content = np.array(new_content).T
 		mw_data[it] = content
 	
-	if reg == 'T': # the spectrum is too big and slows down the app in TCCON mode, so divide it in smaller windows for display
+	if 'hcl' in spectrum.lower(): # the spectrum is too big and slows down the app with the single HCl window, so divide it in smaller windows for display
 		tccon_mode_windows = [	(5683.18,5683.98),
 								(5687.25,5688.05),
 								(5701.58,5702.38),
@@ -1256,7 +1256,7 @@ def change_spectrum(attr,old,new):
 	# update the microwindow buttons
 	MW_buttons = curdoc().select_one({'name':'MW_buttons'})
 	N_windows = len(window_dict[cell])
-	if 'reg=T' in test:
+	if 'hcl' in test.lower():
 		N_windows = 18
 	MW_buttons.labels = ['MW {}'.format(i+1) for i in range(N_windows)]
 
