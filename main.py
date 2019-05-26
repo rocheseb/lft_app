@@ -119,6 +119,7 @@ site_data = lft_setup.site_data()
 window_dict = lft_setup.window_data()
 
 cell_map = {'hcl':site_data['hcl'],'hbr':site_data['hbr'],'n2o':site_data['n2o']} # read cell data
+model_map = {'1: Simple':1,'2: TCCON':2,'3: Extended':3,'4: TCCON 14.7':4} # the different ILS models of Linefit
 
 # This is a color list of 20 "high contrast" colors.
 kelly_colors = [ 	'#F3C300','#875692', '#F38400', '#A1CAF1','#BE0032', '#C2B280', '#848482','#008856', '#E68FAC', '#0067A5',
@@ -426,11 +427,14 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 	N_windows = len(window_list)
 
 	reg = curdoc().select_one({'name':'reg_input'}).value
-	if reg == 'TCCON':
+	model_input = curdoc().select_one({'name':'model_input'})
+	
+	ILS_model = model_input.value
+	if ILS_model == '4: TCCON 14.7':
 		reg = 0.3
-		ILS_model = 4 # TCCON ILS model for HCl cells
-	else:
-		ILS_model = 3 # extended ILS model
+
+	if 'TCCON' in ILS_model and cell!='hcl': # if a TCCON mode is used with a N2O or HBr cell, use the Extended mode instead
+		ILS_model = '3: Extended'
 
 	maxir = '{:>8.6f}'.format(APT/2.0/site_data['FOC'][site]) # maximum inclination of rays in the interferometer (aperture radius / focal length of collimator)
 
@@ -443,7 +447,7 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 
 	template_inputs.update({
 		'species':species,										# species
-		'ILS_model':ILS_model,
+		'ILS_model':model_map[ILS_model],
 		'maxopd':MOPD,											# maximum optical path difference (cm)
 		'maxir':maxir,											# maximum inclination of rays in interferometer (apterture radius)/(focal length of colimator)
 		'window_list':window_list,								# list of tuples for microwindow boundaries
@@ -546,11 +550,18 @@ def setup_linefit():
 		status_div.text = "Select a spectrum"
 		return
 
+	ILS_model = model_input.value
+	if 'TCCON' in ILS_model and cell != 'hcl': # if a TCCON model is chosen but an HBr/N2O is run, use the Extended ILS model.
+		print('\nThe ILS model "{}"" can only be used with HCl cells\nUsing the ILS model "3: Extended" instead'.format(ILS_model))
+		ILS_model = '3: Extended'
+	status_div.text += "<br>- ILS_model {}".format(ILS_model)
+	print("\nILS_model {}".format(ILS_model))
+
 	reg_input = curdoc().select_one({"name":"reg_input"})
 
 	reg = reg_input.value # this won't be used for HCl cell tests
 
-	status_div.text += "<br>- reg= {}".format(reg)
+	status_div.text += "<br>- regularisation = {}".format(reg)
 	print('\nreg=',reg)
 
 	if reg!='TCCON':
@@ -612,7 +623,7 @@ def check_colors(add_one=False):
 	if add_one:
 		add = 1	# when used in setup_linefit()
 
-	test_list = sorted([i for i in all_data.keys() if 'reg' in i])
+	test_list = sorted([i for i in all_data.keys() if 'r=' in i])
 	
 	N_tests = len(test_list)
 
@@ -766,7 +777,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		y = y[(x>=minwn) & (x<=maxwn)]
 		x = x[(x>=minwn) & (x<=maxwn)]
 
-	if cell == 'hcl' and model_input.value=='Extended':
+	if cell == 'hcl' and model_input.value!='4: TCCON 14.7':
 		if 0.7<np.mean(y)<1.3: # spectrum was already ratioed
 			return
 
@@ -804,7 +815,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		# just take the average intensity to do the ratio
 		base_y = np.mean(y)
 	
-	if cell == 'hcl' and model_input.value=='TCCON': # for HCl and the TCCON mode, Linefit will do the ratioing
+	if cell == 'hcl' and model_input.value=='4: TCCON 14.7': # for HCl and the TCCON mode, Linefit will do the ratioing
 		new_y = y
 	else:
 		new_y = y/base_y # ratio to ~1
@@ -820,12 +831,17 @@ def linefit_results(spectrum,colo):
 	global all_data, ignore_spec
 
 	status_div = curdoc().select_one({"name":"status_div"})
+	model_input = curdoc().select_one({"name":"model_input"})
 
 	# string containing info on the current spectrum + current regularisation factor
 	reg = curdoc().select_one({'name':'reg_input'}).value
 	if reg == 'TCCON':
 		reg = 'T' # use a shorter string to get smaller test buttons and legends
-	test = '{} reg={}'.format(spectrum.split('.')[0],reg)
+
+	ILS_model = model_input.value
+	if 'TCCON' in ILS_model and 'hcl' not in spectrum.lower(): # if a TCCON mode is selected with a N2O or HBr cell, use the Extended model instead
+		ILS_model = '3: Extended'
+	test = '{} m={} r={}'.format(spectrum.split('.')[0],model_map[ILS_model],reg)
 
 	add_button(test)
 
@@ -1065,7 +1081,7 @@ def add_button(test):
 	all_test_buttons = [elem[1] for elem in sorted(all_test_buttons)]
 	max_ID = len(all_test_buttons)
 
-	test_button = Button(label=test,width=200,name='test_button_{}'.format(max_ID+1))
+	test_button = Button(label=test,width=230,name='test_button_{}'.format(max_ID+1))
 	remove_button = Button(label='X',width=15,tags=[test],css_classes=["remove_button"],name='remove_button_{}'.format(max_ID))
 	
 	button_box = curdoc().select_one({"name":"button_box"})
@@ -1113,7 +1129,7 @@ def update_doc():
 
 	status_div.text = 'Updating plots ...'
 
-	test_list = sorted([key for key in all_data if 'reg' in key])
+	test_list = sorted([key for key in all_data if 'r=' in key])
 
 	colo = check_colors()
 
@@ -1461,7 +1477,7 @@ def load_session():
 	
 	all_data = np.load(saved_session).item()
 
-	test_list = [i for i in all_data.keys() if 'reg' in i]
+	test_list = [i for i in all_data.keys() if 'r=' in i]
 	if not ignore_spec:
 		# check that all tests in the saved data have a stored spectrum.
 		# if they don't all have a spectrum, switch to the ignore_spec mode.
@@ -1500,13 +1516,13 @@ def update_dropdowns():
 def check_cell(attr,old,new):
 	"""
 	triggers when a new spectrum is selected from the dropdown
-	if 'hcl' is in the spectrum name check the chosen HCl ILS model and enable/disable the regularisation input
+	if 'hcl' is in the spectrum name check the chosen ILS model and enable/disable the regularisation input
 	"""
 	reg_input = curdoc().select_one({"name":"reg_input"})
 	model_input = curdoc().select_one({"name":"model_input"})
 	status_div = curdoc().select_one({"name":"status_div"})
 
-	if 'hcl' in new.lower() and model_input.value=='TCCON':
+	if 'hcl' in new.lower() and model_input.value=='4: TCCON 14.7':
 		status_div.text = "The regularisation factor is adjusted automatically in TCCON mode<br><b>Ready</b>"
 		reg_input.value = 'TCCON'
 		reg_input.disabled = True # deactivate the widget
@@ -1517,14 +1533,14 @@ def check_cell(attr,old,new):
 
 def update_ILS_model(attr,old,new):
 	"""
-	triggers when the HCl ILS model input is changed
-	Disable or Enable the regularisation input based on the chosen HCl ILS model
+	triggers when the ILS model input is changed
+	Disable or Enable the regularisation input based on the chosen ILS model
 	"""
 	reg_input = curdoc().select_one({"name":"reg_input"})
 	status_div = curdoc().select_one({"name":"status_div"})
 	spec_input = curdoc().select_one({"name":"spec_input"})
 
-	if new == 'TCCON' and 'hcl' in spec_input.value.lower():
+	if new == '4: TCCON 14.7' and 'hcl' in spec_input.value.lower():
 		status_div.text = "The regularisation factor is adjusted automatically in TCCON mode<br><b>Ready</b>"
 		reg_input.value = 'TCCON'
 		reg_input.disabled = True # deactivate the widget
@@ -1545,7 +1561,7 @@ def doc_maker():
 	## WIDGETS
 	# Inputs
 	spec_input = Select(title='Spectrum:',options = ['']+[i for i in os.listdir(spec_path) if reg_dpt.match(i) or reg_opus.match(i)],width=150,css_classes=["spec_input"],name="spec_input")
-	model_input = Select(title='HCl ILS model:',options=['Extended','TCCON'],value='TCCON',width=100,name="model_input")
+	model_input = Select(title='ILS model:',options=['1: Simple','2: TCCON','3: Extended','4: TCCON 14.7'],value='3: Extended',width=100,name="model_input")
 	reg_input = TextInput(value='1.8',title='Regularisation factor:',width=150,css_classes=["small_input"],name="reg_input")
 	session_input = Select(title='Previous sessions:',width=150,options=['']+[i for i in os.listdir(save_path) if reg_npy.match(i)],css_classes=["spec_input"],name="session_input")
 	save_input = TextInput(title='Save name',value="_".join(str(datetime.now())[:-7].split()).replace(':','-'),css_classes=["save_input"],name="save_input")
@@ -1653,7 +1669,7 @@ def doc_maker():
 	AKphase_fig.scatter(x='fix',y='opd',color='color',source=ak_source,name="AKphase_scatter")
 	
 	## LEGEND
-	dum_fig = figure(plot_width=265,plot_height=850,outline_line_alpha=0,toolbar_location=None,name='dum_fig')
+	dum_fig = figure(plot_width=295,plot_height=850,outline_line_alpha=0,toolbar_location=None,name='dum_fig')
 	dum_fig.x_range.end = 1005
 	dum_fig.x_range.start = 1000
 	dum_fig.grid[0].visible = False
@@ -1690,13 +1706,13 @@ def doc_maker():
 	ak_panel = Panel(child=ak_grid,title='Averaging kernels')
 
 	# put the ils_fits_panel and MEPECOL_panel in a Tabs() object
-	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel],width=890,name='final',css_classes=["custom_tabs"])
+	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel],width=920,name='final',css_classes=["custom_tabs"])
 
 	# put all the widgets in a widget box
 	widget_box = widgetbox(space_div,refresh_button,session_input,load_button,line_div,dum_div,spec_input,model_input,dum_div2,reg_input,line_div2,lft_button,line_div4,save_input,save_button,line_div3,loop_input,loop_button,dum_div3,loader,status_text,status_div,css_classes=['side_widgets'],name="widget_box")
 
 	# empty widget box. After linefit is run, it will be filled with buttons that select the spectrum to be displayed in the ils_fits_panel
-	button_box = Column(children=[widgetbox(width=255)],name='button_box')
+	button_box = Column(children=[widgetbox(width=280)],name='button_box')
 
 	# put the widget_box in a grid
 	side_box = gridplot([[widget_box]],toolbar_location=None)

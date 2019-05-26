@@ -95,8 +95,9 @@ There are two example spectra from Eureka in lft_app/spectra/cut/ so the app can
 
 Spectra should be ratioed to ~1 to be used with the linefit extended mode:
 
-- HCl cells, done in linefit: 
-	- The TCCON mode is used for HCl cells and linefit will take care of the ratioing
+- HCl cells, done in linefit or in the code: 
+	- if the TCCON 14.7 mode is used for HCl cells and linefit will take care of the ratioing
+	- for other modes, a 2nd order polynomial is used to fit the spectrum without its lines and is then used for the ratioing
 
 - HBr cells, done in the code:
 	- background
@@ -131,11 +132,13 @@ Load the selected .npy file
 
 Dropdown to select a spectrum file from the lft_app/spectra/cut/ directory
 
-##### HCl ILS model #####
+##### ILS model #####
 
-For HCl cells, this input lets you choose between the Extended mode and the TCCON mode
+Can be used to select the ILS model used by linefit.
 
-HBr and N2O cells are always done with the Extended mode
+If one of the TCCON modes is chosen with a HBr or N2O test, the Extended mode is used instead.
+
+The ILS model will be indicated in test buttons and the legend with "m="
 
 ##### Regularisation factor #####
 
@@ -143,7 +146,9 @@ Textinput to quickly change the regularisation factor (same number for reg_mod a
 
 When selected a HCl spectrum, this widget is disabled and its value set to 'TCCON'
 
-The HCl cell tests are processed with the TCCON mode of linefit 14.7, the regularisation factor is adjusted during the processing and will be output in /ergs/TCCON.dat
+If the HCl cell tests are processed with the TCCON mode of linefit 14.7, the regularisation factor is adjusted during the processing and will be output in /ergs/TCCON.dat
+
+The regularisation factor will be indicated in test buttons and the legend with "r=", with the TCCON ILS model of linefit 14.7 this will be "r=T" instead
 
 ##### Run linefit #####
 
@@ -205,7 +210,7 @@ You can click or select the scatter points to highlight the correspond averaging
 
 N2O and HBr cell spectra are processed in a loop until the cell pressure converges; this usually take 2-3 linefit runs.
 
-For HCl cell spectra this is done directly in linefit with the TCCON mode, so it takes longer to process these spectra compared to the extended mode
+For HCl cell spectra this is done directly in linefit with the TCCON 14.7 mode, so it takes longer to process these spectra compared to the extended mode
 
 The python dictionaries saved in lft_app/saved_sessions/ can be merged with a utility program lft_app/utils/merge_sessions.py
 
@@ -223,7 +228,7 @@ There will be more detailed outputs in the terminal than in the browser, the act
 
 If a significant spectral detuning is detected, the app will use it to update the input file and re-run linefit.
 
-For HCl cells the spectral detuning is corrected directly by linefit TCCON mode before the fitting.
+For HCl cells the spectral detuning is corrected directly by linefit for the TCCON 14.7 mode before the fitting.
 
 ### Contact ###
 
