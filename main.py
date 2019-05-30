@@ -316,7 +316,8 @@ def execute(cmd,cwd=os.getcwd(),inputs=[0]):
 
 				for i,line in enumerate(content):
 					if ".true.,1.0" in line:
-						content[i] = ".true.,1.0,{:.2E}\n".format(spectral_detuning)
+						cur_det = float(line.split(',')[-1])
+						content[i] = ".true.,1.0,{:.2E}\n".format(cur_det+spectral_detuning)
 
 				with open(input_file,'w') as outfile:
 					outfile.writelines(content)
