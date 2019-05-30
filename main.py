@@ -60,6 +60,33 @@ from jinja2 import Template
 # color palettes for plots
 from bokeh.palettes import Viridis256,viridis
 
+####################
+# Acknowledgements #
+####################
+
+acknowledgements_txt = """
+<font size='5' color='teal'><b>Acknowledgements:</b></font><br>
+<ul>
+<li>Linefit is an instrument line shape-calculating program written by <b>Frank Hase</b> at the Institute for Meteorology und Climate Research (IMK) in Karlsruhe.<br>
+<br>
+	<a href='https://doi.org/10.1364/AO.38.003417'><span style="background-color:lightgray">Frank Hase, Thomas Blumenstock, and Clare Paton-Walsh, Analysis of the Instrumental Line Shape of High-Resolution Fourier Transform IR Spectrometers with Gas Cell Measurements and New Retrieval Software, Applied Optics, Vol. 38, Issue 15, pp. 3417-3422 (1999)</span></a>
+</li><br><br>
+<li>This bokeh application was developed by <b>Sébastien Roche</b> at the University of Toronto. It runs and displays the outputs of Linefit 14.7.<br></li>
+<br>
+<li><a href='https://bokeh.pydata.org'>Bokeh</a> is a python plotting library which allows to display interactive plots in the browser.<br></li> 
+<br>
+<li>The <b>opus.py</b> code was developed by the Infrared Observations team at BIRA-IASB who received funding from the AGACC-2 project
+ (Advanced exploitation of Ground-based measurements for Atmospheric Chemistry and Climate applications-II),
+CONTRAT N° SD/CS/07A of the Belgian Science for Sustainable Development research programme ),
+the Belgian federal support to ICOS (ministerial decree FR/35/IC1),
+the EU FP7 ICOS_Inwire project and BIRA-IASB own resources.<br></li>
+<br>
+</ul>
+<font size='5' color='teal'><b>Contact:</b></font><br>
+For this application: <b>sebastien.roche@mail.utoronto.ca</b><br>
+For the Linefit program: <b>frank.hase@kit.edu</b>
+"""
+
 #####################
 # General Functions #
 #####################
@@ -1606,7 +1633,7 @@ def doc_maker():
 	## WIDGETS
 	# Inputs
 	spec_input = Select(title='Spectrum:',options = ['']+[i for i in os.listdir(spec_path) if reg_dpt.match(i) or reg_opus.match(i)],width=150,css_classes=["spec_input"],name="spec_input")
-	model_input = Select(title='ILS model:',options=['1: Simple','2: TCCON','3: Extended','4: TCCON 14.7'],value='3: Extended',width=100,name="model_input")
+	model_input = Select(title='ILS model:',options=['1: Simple','2: TCCON','3: Extended','4: TCCON 14.7'],value='3: Extended',width=180,name="model_input")
 	reg_input = TextInput(value='1.8',title='Regularisation factor:',width=150,css_classes=["small_input"],name="reg_input")
 	session_input = Select(title='Previous sessions:',width=150,options=['']+[i for i in os.listdir(save_path) if reg_npy.match(i)],css_classes=["spec_input"],name="session_input")
 	save_input = TextInput(title='Save name',value="_".join(str(datetime.now())[:-7].split()).replace(':','-'),css_classes=["save_input"],name="save_input")
@@ -1615,7 +1642,7 @@ def doc_maker():
 	spec_input.on_change('value',check_cell)
 	model_input.on_change('value',update_ILS_model)
 	# BUTTONS
-	lft_button = Button(label='Run linefit', width=80, css_classes=["custom_button"],name="lft_button")
+	lft_button = Button(label='Run linefit', width=80, css_classes=["custom_button","lft_button"],name="lft_button")
 	save_button = Button(label='Save Session', width=90, css_classes=["custom_button"],name="save_button")
 	load_button = Button(label='Load Session', width=90, css_classes=["custom_button"],name="load_button")
 	loop_button = Button(label='loop',width=90, css_classes=["custom_button"],name="loop_button")
@@ -1644,7 +1671,7 @@ def doc_maker():
 	dum_div2 = Div(text='',height=10,name="dum_div2")
 	dum_div3 = Div(text='',height=15,name="dum_div3")
 	# Separation lines
-	line_div,line_div2,line_div3,line_div4 = [linediv(width=220) for i in range(4)]
+	line_div,line_div2,line_div3,line_div4,line_div5,line_div6 = [linediv(width=220) for i in range(6)]
 
 	## FIGURES
 	# Modulation efficiency
@@ -1750,11 +1777,18 @@ def doc_maker():
 	# Panel of the ak_grid
 	ak_panel = Panel(child=ak_grid,title='Averaging kernels')
 
+	# Options panel: will hold some of the input widgets
+	options_grid = gridplot([[widgetbox(save_input,save_button,line_div3,loop_input,loop_button),widgetbox(session_input,load_button,line_div5)]],toolbar_location=None)
+	options_panel = Panel(child=options_grid,title='Options')
+
+	# Acknowledgements panel
+	acknowledgements_panel = Panel(child=Div(text=acknowledgements_txt,width=800),title="Acknowledgements")
+
 	# put the ils_fits_panel and MEPECOL_panel in a Tabs() object
-	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel],width=920,name='final',css_classes=["custom_tabs"])
+	final = Tabs(tabs=[MEPECOL_panel,ils_fits_panel,ak_panel,options_panel,acknowledgements_panel],width=920,name='final',css_classes=["custom_tabs"])
 
 	# put all the widgets in a widget box
-	widget_box = widgetbox(space_div,refresh_button,session_input,load_button,line_div,dum_div,spec_input,model_input,dum_div2,reg_input,line_div2,lft_button,line_div4,save_input,save_button,line_div3,loop_input,loop_button,dum_div3,loader,status_text,status_div,css_classes=['side_widgets'],name="widget_box")
+	widget_box = widgetbox(refresh_button,line_div,spec_input,line_div6,model_input,reg_input,line_div2,Row(lft_button,loader),line_div4,status_text,status_div,css_classes=['side_widgets'],name="widget_box")
 
 	# empty widget box. After linefit is run, it will be filled with buttons that select the spectrum to be displayed in the ils_fits_panel
 	button_box = Column(children=[widgetbox(width=280)],name='button_box')
