@@ -1150,7 +1150,8 @@ def remove_test(attr,old,new):
 	global all_data
 
 	all_buttons = curdoc().select({'type':Button})
-	all_remove_buttons = sorted([button for button in all_buttons if 'remove_button' in button.name])
+	all_remove_buttons = [(int(button.name.split('_')[-1]),button) for button in all_buttons if 'remove_button' in button.name]
+	all_remove_buttons = [elem[1] for elem in sorted(all_remove_buttons)]
 
 	for button in all_remove_buttons:
 		if button.clicks==1:
