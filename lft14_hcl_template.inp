@@ -116,7 +116,7 @@ species parameters:
         for each MW: take species into account(T/F),column scaling factor, spectral scaling factor of species - 1
 
 $
-{{temperature}},.false.,{{column}},{{pressure}},.false.,{{pressure}},0.0075
+{{temperature}},{{ret_temp}},{{column}},{{pressure}},.false.,{{pressure}},0.0075
 .true.,1.0,0.0
 {{temperature}},.false.,{{column_2}},{{pressure_2}},.false.,{{pressure_2}},0.0075
 .true.,1.0,0.0

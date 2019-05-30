@@ -109,7 +109,7 @@ elif system == 'Darwin':
 
 specname_fmt = '{}_{}_{}_{:d}_{}_{:d}.{}' # formatted string for spectrum file names YYMMDD_site_cell_X_MOPD_num
 
-fmt = '{:.2f},.false.,{:.4e},{:.3f},.false.,{:.3f},0.0075\n' # formatted string to read and edit the input file
+fmt = '{:.2f},{},{:.4e},{:.3f},.false.,{:.3f},0.0075\n' # formatted string to read and edit the input file
 
 reg_dpt = re.compile('.*[.]dpt$',re.IGNORECASE) # regular expression that will be used to select .dpt files
 reg_opus = re.compile('.*[.][\d]+$',re.IGNORECASE) # regular expression that will be used to select opus files
@@ -360,7 +360,7 @@ def get_inputs(spectrum,mode):
 		- temperature: scanner temperature (K)
 		- window_list: list of microwindows that corresponds to the cell
 	'''
-
+	temp_loop = False # if True, the temperature will be retrieved
 	try:
 		date,site,cell,MOPD,ev,num,ext = parse.parse(specname_fmt,spectrum)
 	except:
@@ -401,13 +401,18 @@ def get_inputs(spectrum,mode):
 		opus_file = Opus(os.path.join(spec_path,spectrum))
 		opus_file.get_data(request='p') # only get parameters
 		parameters = opus_file.param[0]
-		temperature = parameters['TSC']+273.15
+		try:
+			temperature = parameters['TSC']+273.15
+		except:
+			print('\n/!\ No "TSC" parameter. Using guess temperature of 24 degrees')
+			temperature = 297.15
+			temp_loop = True
 		APT = float(parameters['APT'].split()[0])
 		site_data['FOC'][site] = parameters['FOC'] # if it existed, the value from lft_setup will be overwritten
 	
-	return site,cell,str(MOPD),APT,temperature,window_list
+	return site,cell,MOPD,APT,temperature,window_list,temp_loop
 
-def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
+def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list,temp_loop):
 	'''
 	Update the linefit input file to correspond to the selected spectrum and regularisation factor.
 	For each site, the cell information must be added to the cell_data.py file
@@ -445,6 +450,11 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 	elif system == "Windows":
 		spec_inp_path = os.path.join('lft_app','spectra',spectrum.split('.')[0]+'.dpt')
 
+	if temp_loop:
+		temp_loop = '.true.'
+	else:
+		temp_loop = '.false.'
+
 	template_inputs.update({
 		'species':species,										# species
 		'ILS_model':model_map[ILS_model],
@@ -456,6 +466,7 @@ def modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list):
 		'regularisation':reg,									# regularisation factor (for both modulation and phase)
 		'spectrum': spec_inp_path,								# full path to the spectrum
 		'temperature':'{:.2f}'.format(temperature),				# scanner temperature (K)
+		'ret_temp':temp_loop,									# if the cell temperature will be retrieved or not
 		})
 
 	if cell == 'hcl':
@@ -544,7 +555,7 @@ def setup_linefit():
 			print(spectrum,'scanner temperature not listed in the temp file')
 			all_data['ID'] += -1
 			return
-	site,cell,MOPD,APT,temperature,window_list = get_inputs(spectrum,mode)
+	site,cell,MOPD,APT,temperature,window_list,temp_loop = get_inputs(spectrum,mode)
 
 	if spectrum=='':
 		status_div.text = "Select a spectrum"
@@ -602,9 +613,9 @@ def setup_linefit():
 
 	# update the input file; make sure that it modifies everything that you need !
 	# the regularisation factors are updated from the browser
-	modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list)
+	modify_input_file(spectrum,site,cell,MOPD,APT,temperature,window_list,temp_loop)
 	
-	exec_issue = run_linefit(cell) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
+	exec_issue = run_linefit(cell,temp_loop) # if an error that can't be handled is encountered, exec_issue will be True and setup_linefit will stop
 	if exec_issue:
 		status_div.text += "<br><b>This issue is not handled by the app</b>"
 		return
@@ -642,7 +653,7 @@ def check_colors(add_one=False):
 			for i,test in enumerate(test_list):
 				all_data[test]['color'] = kelly_colors[i]			
 
-def run_linefit(cell):
+def run_linefit(cell,temp_loop):
 	'''
 	Run linefit and prints the output in the terminal as it is running.
 
@@ -662,6 +673,8 @@ def run_linefit(cell):
 	if cell in ['n2o','hbr']:
 		iteration = 1
 		conv = False
+		pres_conv = False
+		temp_conv = not temp_loop
 		while not conv:
 			# open the input file
 			with open(os.path.join(wdir,'lft14.inp'),'r') as infile:
@@ -670,23 +683,50 @@ def run_linefit(cell):
 			# read the column and pressure
 			for i,line in enumerate(content):
 				if 'species parameters:' in line:
-					temperature,column,pressure,pressure = parse.parse(fmt,content[i+8])
-					break
+					temperature,dum,column,pressure,pressure = parse.parse(fmt,content[i+8])
+					break			
 
-			# read the column scale factor
-			with open(os.path.join(erg_path,'colparms.dat'),'r') as infile:
-				col_content = infile.readlines()
+			if not temp_conv:
+				# read the retrieved temperature
+				with open(os.path.join(erg_path,'Tparms.dat')) as infile:
+					T_content = infile.readlines()
+				new_temperature = float(T_content[0].split()[1])
 
-			scale_factor = np.mean([float(x) for x in col_content[1:]])
+				print('\n\t- temp,new_temp,dif:',temperature,new_temperature,abs(temperature-new_temperature))
+				if abs(new_temperature-temperature)<0.05:
+					temp_conv = True
+					status_div.text += '<br>- temperature converged'
 
-			# compute the scaled column and the new pressure
-			new_column = scale_factor * column
-			new_pressure = compute_pressure(new_column,temperature)
+				temperature = new_temperature
 
-			print('\n\t- pres,new_pres,dif:',pressure,new_pressure,abs(pressure-new_pressure))
-			# check for convergence
-			if abs(pressure-new_pressure)<0.001:
-				conv = True
+				for j,line in enumerate(content):
+					if 'gas cell parameters:' in line:
+						content[i+13] = '{:.2f}\n'.format(temperature)
+			
+			if not pres_conv or not temp_conv:
+				# read the column scale factor
+				with open(os.path.join(erg_path,'colparms.dat'),'r') as infile:
+					col_content = infile.readlines()
+
+				scale_factor = np.mean([float(x) for x in col_content[1:]])
+
+				# compute the scaled column and the new pressure
+				new_column = scale_factor * column
+				new_pressure = compute_pressure(new_column,temperature)
+
+				print('\n\t- pres,new_pres,dif:',pressure,new_pressure,abs(pressure-new_pressure))
+				# check for convergence
+				if abs(pressure-new_pressure)<0.001:
+					pres_conv = True
+					status_div.text += '<br>- pressure converged'
+				else:
+					pres_conv = False
+
+				pressure = new_pressure
+			
+			conv = temp_conv and pres_conv
+			
+			if conv:
 				break
 
 			# force stop if a certain number of iterations is reached
@@ -695,7 +735,7 @@ def run_linefit(cell):
 				break
 
 			# replace the pressure in the input file
-			content[i+8] = fmt.format(temperature,column,new_pressure,new_pressure)
+			content[i+8] = fmt.format(temperature,dum,column,pressure,pressure)
 
 			with open(os.path.join(wdir,'lft14.inp'),'w') as outfile:
 				content = outfile.writelines(content)
@@ -709,7 +749,6 @@ def run_linefit(cell):
 				
 		if conv:
 			print('\n\t- convergence after',iteration,'iterations')
-			status_div.text += '<br>- pressure converged'
 		else:
 			print('\n\t- no convergence')
 			status_div.text += '<br>- pressure <b>did not<b> converge'
@@ -789,7 +828,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 
 		# I substract an offset because the way I fit will always be a bit too high as it will include values above the base line
 		base_y = fit[0]*x**2+fit[1]*x+fit[2]-0.0004 # use the fit to get the fit line for each x
-
+		
 	elif cell == 'hbr':
 		ref_path = os.path.join(bkg_path,'ref_'+spectrum)
 		if mode == 'dpt':	
