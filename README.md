@@ -6,9 +6,11 @@ Linefit is an instrument line shape-calculating program written by Frank Hase at
 
 This app can be used to run linefit 14.7 and display its outputs.
 
-This app works with python 3.x and with bokeh > 1.1.0 installed.
+This app works with python 3.x and with bokeh >= 1.1.0 installed.
 
 	Bokeh: https://bokeh.pydata.org/en/latest/docs/installation.html
+
+Bokeh package version with the latest commit: 1.2.0 
 
 There are issues with the latest versions of Tornado, the apps works fine with Tornado 4.5.2
 
