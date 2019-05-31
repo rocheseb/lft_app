@@ -11,6 +11,10 @@
 	font-weight: bold;
 }
 
+.lft_button button.bk.bk-btn.bk-btn-default {
+	height: 40px !important;
+}
+
 label {
 	font-weight: bold;
 	color:teal;
