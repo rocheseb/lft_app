@@ -395,9 +395,6 @@ def get_inputs(spectrum,mode):
 		print('Error with filename',spectrum,'\nMust follow YYMMDD_site_cell_X_MOPD_num.dpt or YYMMDD_site_cell_X_MOPD_num.num for OPUS files')
 		sys.exit()
 
-	if MOPD == 257:
-		MOPD = 0.9/0.0035 # use the exact MOPD instead, the resolution is 0.0035 and Bruker definition of resolution is res = 0.9/MOPD
-
 	cell = cell.lower()
 	site = site.lower()
 	ev = ev.lower()
@@ -435,11 +432,18 @@ def get_inputs(spectrum,mode):
 		try:
 			temperature = parameters['TSC']+273.15
 		except:
-			print('\n/!\ No "TSC" parameter. Using guess temperature of 24 degrees')
-			temperature = 297.15
+			print('\n/!\ No "TSC" parameter. Using guess temperature of 24 degrees C')
+			temperature = 297.15 # (K)
 			temp_loop = True
 		APT = float(parameters['APT'].split()[0])
-		MOPD = 0.9/float(parameters['RES']) # use the resolution to get the MOPD, Bruker definition of resolution is 0.9/MOPD
+		opus_MOPD = 0.9/float(parameters['RES']) # use the resolution to get the MOPD, Bruker definition of resolution is 0.9/MOPD
+		if abs(opus_MOPD-MOPD)>1: # MOPD is an int while opus_MOPD can be a float, so allow up to 1 cm difference before showing the warning
+			print('\n/!\ Filename and OPUS header MOPD are different !')
+			print('The MOPD from the file name is {} while the MOPD from the opus header is {}'.format(MOPD,opus_MOPD))
+			print('The MOPD from the file name will be used, the spectrum will be resampled to that MOPD')
+		else:
+			MOPD = opus_MOPD
+		print('\nMOPD =',MOPD)
 		site_data['FOC'][site] = parameters['FOC'] # if it existed, the value from lft_setup will be overwritten
 	
 	return site,cell,MOPD,APT,temperature,window_list,temp_loop
