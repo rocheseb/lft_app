@@ -847,7 +847,7 @@ def ratio_spectrum(spectrum_path,bkg_path,spectrum,cell,mode):
 		elif cell == 'n2o':
 			minwn,maxwn = (2100,2300)
 		elif cell == 'hbr':
-			minwn,maxwn = (2500,2700)
+			minwn,maxwn = (2502,2699.8)
 
 		y = y[(x>=minwn) & (x<=maxwn)]
 		x = x[(x>=minwn) & (x<=maxwn)]
