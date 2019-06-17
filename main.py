@@ -1410,7 +1410,7 @@ def pdf_report(save_name):
 	maxdate = datetime(1900,1,1)
 	for test in sorted(all_data.keys()):
 
-		if 'reg' in test:
+		if 'r=' in test:
 
 			cell = test.split('_')[2].lower()
 			
@@ -1461,7 +1461,7 @@ def pdf_report(save_name):
 			
 			# microwindows
 			pl.figure(mw_fig.number)
-			for i in range(1,len(window_dict[cell])+1):
+			for i in range(1,len([j for j in all_data[test].keys() if ('mw' in j) and ('resid' not in j)])+1):
 				mw_source = all_data[test]['mw{}'.format(i)]
 				meas = mw[0].plot(mw_source['x'],mw_source['meas'],color='blue',label='measured')
 				calc = mw[0].plot(mw_source['x'],mw_source['calc'],color='red',label='calculated')
@@ -1489,7 +1489,7 @@ def pdf_report(save_name):
 	for elem in ax:
 		box = elem.get_position()
 		elem.set_position([box.x0, box.y0, box.width, box.height*0.7])
-	lgd = pl.legend(mepelines,[test for test in all_data if 'reg' in test],bbox_to_anchor=(0.5,-0.3),loc='upper center', borderaxespad=0,ncol=3)
+	lgd = pl.legend(mepelines,[test for test in all_data if 'r=' in test],bbox_to_anchor=(0.5,-0.3),loc='upper center', borderaxespad=0,ncol=3)
 	ax[0].set_ylabel("ME")
 	ax[1].set_ylabel("Phase Error")
 	ax[1].set_xlabel("OPD (cm)")
